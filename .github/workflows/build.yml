@@ -118,6 +118,9 @@ jobs:
             arch/arm64/configs/vendor/xiaomi_GKI.config \
             arch/arm64/configs/vendor/cupid_GKI.config
 
+          # Enable IPC, POSIX mqueue, Namespaces (Required for modern AOSP A16/A17 container & zygote boot)
+          ./scripts/config --file out/.config -e SYSVIPC -e POSIX_MQUEUE -e USER_NS -e PID_NS -e IPC_NS
+
           # 3. KernelSU flag
           if [ "${{ inputs.ksu_variant }}" != "none" ]; then
             ./scripts/config --file out/.config -e KSU
