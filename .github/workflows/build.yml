@@ -203,4 +203,4 @@ jobs:
           gh release create "${REL_TAG}" \
             release-pkg/* \
             --title "${RELEASE_TITLE}" \
-            --notes "Carbon Kernel v1.0 — Sagittarius A* (cupid / SM8450) with KernelSU-${{ inputs.ksu_variant }} | SHA256: ${{ env.ZIP_SHA256 }}"
+            --notes "Carbon Kernel v1.0 — Sagittarius A* (cupid / SM8450) | SHA256: ${{ env.ZIP_SHA256 }}"

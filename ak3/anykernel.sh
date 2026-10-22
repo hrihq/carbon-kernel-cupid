@@ -10,8 +10,8 @@ supported.versions=
 supported.patchlevels=
 '; }
 
-block=boot;
-is_slot_device=auto;
+BLOCK=boot;
+IS_SLOT_DEVICE=auto;
 ramdisk_compression=auto;
 patch_vbmeta_flag=auto;
 
@@ -47,9 +47,8 @@ backup_current_boot() {
 
 ui_print " ";
 ui_print "Carbon Kernel - Xiaomi 12 (cupid)";
-ui_print "KernelSU-Next integrated";
 ui_print "Current boot image will be backed up before flashing.";
 
-dump_boot;
+split_boot;
 backup_current_boot;
-write_boot;
+flash_boot;
