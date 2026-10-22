@@ -29,7 +29,7 @@ on:
         default: true
 
 jobs:
-  Reforging:
+  Build-Carbon:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -157,7 +157,7 @@ jobs:
           cp ak3/banner ak3-pkg/banner
           cp kernel-source/out/arch/arm64/boot/Image ak3-pkg/Image
 
-          ZIP_NAME="Carbon-Kernel-cupid-${{ inputs.ksu_variant }}-${BUILD_TIME}.zip"
+          ZIP_NAME="Carbon-Kernel-cupid-SagittariusA-${{ inputs.ksu_variant }}-${BUILD_TIME}.zip"
           cd ak3-pkg
           zip -r9 "../${ZIP_NAME}" . -x ".git/*" "README.md"
           cd ..
@@ -182,8 +182,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           REL_TAG="v1.0-${BUILD_TIME}"
-          RELEASE_TITLE="Carbon Kernel ${REL_TAG} (cupid) - KernelSU-${{ inputs.ksu_variant }}"
+          RELEASE_TITLE="Carbon Kernel v1.0 — Sagittarius A* (cupid)"
           gh release create "${REL_TAG}" \
             release-pkg/* \
             --title "${RELEASE_TITLE}" \
-            --notes "Carbon Kernel for Xiaomi 12 (cupid / SM8450) with KernelSU-${{ inputs.ksu_variant }} (SHA256: ${{ env.ZIP_SHA256 }})"
+            --notes "Carbon Kernel v1.0 — Sagittarius A* (cupid / SM8450) with KernelSU-${{ inputs.ksu_variant }} | SHA256: ${{ env.ZIP_SHA256 }}"
