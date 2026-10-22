@@ -18,11 +18,11 @@ on:
       compiler:
         description: "Select Compiler"
         required: true
-        default: "Neutron-Clang"
+        default: "AOSP-Clang"
         type: choice
         options:
-          - "Neutron-Clang"
           - "AOSP-Clang"
+          - "Neutron-Clang"
       create_release:
         description: "Create GitHub Release"
         type: boolean
@@ -60,20 +60,24 @@ jobs:
           set -e
           mkdir -p clang
 
-          if [[ "${{ github.event.inputs.compiler }}" == "AOSP-Clang" ]]; then
-            echo "Using AOSP Clang mirror..."
-            CLANG_URL=$(curl -fsSL https://api.github.com/repos/bachnxuan/aosp_clang_mirror/releases/latest | grep "browser_download_url" | grep -E 'clang-.*\.tar\.gz' | head -n 1 | cut -d '"' -f 4)
-            echo "Downloading: $CLANG_URL"
-            curl -L "$CLANG_URL" -o clang.tar.gz
-            tar -C clang -xf clang.tar.gz
-            rm -f clang.tar.gz
-          else
+          if [[ "${{ github.event.inputs.compiler }}" == "Neutron-Clang" ]]; then
             echo "Using Neutron Clang..."
             CLANG_URL=$(curl -fsSL https://api.github.com/repos/Neutron-Toolchains/clang-build-catalogue/releases/latest | grep "browser_download_url" | grep "neutron-clang" | head -n 1 | cut -d '"' -f 4)
             echo "Downloading: $CLANG_URL"
             curl -L "$CLANG_URL" -o neutron-clang.tar.zst
             tar -C clang -xf neutron-clang.tar.zst
             rm -f neutron-clang.tar.zst
+          else
+            echo "Using Google Android Clang r416183b (Clang 12.0.5 - Official ACK / LineageOS 24)..."
+            toolchain_repo="${RUNNER_TEMP}/android-clang-repo"
+            rm -rf "${toolchain_repo}"
+            git clone --filter=blob:none --no-checkout --depth=1 \
+              --branch master-kernel-build-2021 \
+              https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 "${toolchain_repo}"
+            git -C "${toolchain_repo}" sparse-checkout set clang-r416183b
+            git -C "${toolchain_repo}" checkout -q --detach 6e3223f76384455acde43affde3df0ea9df66c0d
+            mv "${toolchain_repo}/clang-r416183b"/* clang/
+            rm -rf "${toolchain_repo}"
           fi
 
           echo "CLANG_PATH=$GITHUB_WORKSPACE/clang" >> "$GITHUB_ENV"
@@ -142,6 +146,10 @@ jobs:
 
           # 5. ThinLTO config with 2 parallel threads wrapper to prevent link OOM
           ./scripts/config --file out/.config -d LTO_NONE -d LTO_CLANG_FULL -e LTO_CLANG -e LTO_CLANG_THIN
+
+          # 6. Restored modular ZRAM/ZSMALLOC to prevent early-init ramdisk conflicts on Android 16/17
+          ./scripts/config --file out/.config -m ZRAM -m ZSMALLOC
+
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 olddefconfig
 
           wrapper="${GITHUB_WORKSPACE}/ld-thinlto-wrapper"
@@ -176,7 +184,7 @@ jobs:
 
           ZIP_NAME="Carbon-Kernel-cupid-SagittariusA-${{ inputs.ksu_variant }}-${BUILD_TIME}.zip"
           cd ak3-pkg
-          zip -r9 "../${ZIP_NAME}" . -x ".git/*" "README.md"
+          zip -r9 "../${ZIP_NAME}" . -x ".git/*" "README.md" ".github/*"
           cd ..
           sha256sum "${ZIP_NAME}" > "${ZIP_NAME}.sha256"
 
