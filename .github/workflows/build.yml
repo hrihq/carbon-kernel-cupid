@@ -1,71 +1,85 @@
 name: Build Carbon Kernel (cupid)
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       ksu_variant:
         description: "KernelSU Variant"
         required: true
-        type: choice
         default: "next"
+        type: choice
         options:
           - "next"
           - "official"
           - "none"
-      lto:
-        description: "Clang LTO Mode"
+      compiler:
+        description: "Select Compiler"
         required: true
+        default: "Neutron-Clang"
         type: choice
-        default: "thin"
         options:
-          - "thin"
-          - "none"
+          - "Neutron-Clang"
+          - "AOSP-Clang"
       create_release:
         description: "Create GitHub Release"
         type: boolean
         default: true
 
 jobs:
-  build:
-    runs-on: ubuntu-24.04
+  Reforging:
+    runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
       contents: write
 
     steps:
-      - name: Checkout Carbon Builder
+      - name: 🔄 Checkout Carbon Builder
         uses: actions/checkout@v4
 
-      - name: Free Runner Disk Space
+      - name: ⏰ Prepare timezone
         run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost /usr/share/swift || true
-          df -h /
+          sudo ln -sf /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 
-      - name: Setup Swap
-        uses: pierotofy/set-swap-space@master
-        with:
-          swap-size-gb: 16
-
-      - name: Install Dependencies
+      - name: 📦 Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            bc bison build-essential ccache cpio curl flex git jq kmod libelf-dev \
-            libncurses-dev libssl-dev lld llvm clang file python3 python-is-python3 \
-            rsync unzip zip zstd
+          sudo apt-get install -y \
+            bc cpio flex bison git python-is-python3 tar aria2 perl wget curl lz4 libssl-dev libelf-dev dwarves zip zstd
 
-      - name: Clone Toolchain (Android Clang r416183b)
+      - name: ⚙️ Setup Environment
         run: |
+          echo "BUILD_TIME=$(TZ=Asia/Jakarta date '+%d%m%Y-%H%M')" >> "$GITHUB_ENV"
+          echo "BUILD_DATE=\"$(TZ=Asia/Jakarta date '+%b %d %Y')\"" >> "$GITHUB_ENV"
+
+      - name: 🔧 Setup Compiler
+        shell: bash
+        run: |
+          set -e
           mkdir -p clang
-          git clone --depth=1 --filter=blob:none --no-checkout \
-            --branch master-kernel-build-2021 \
-            https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 clang-repo
-          cd clang-repo
-          git checkout 6e3223f76384455acde43affde3df0ea9df66c0d -- clang-r416183b
-          mv clang-r416183b/* ../clang/
-          cd ..
-          rm -rf clang-repo
-          ./clang/bin/clang --version
+
+          if [[ "${{ github.event.inputs.compiler }}" == "AOSP-Clang" ]]; then
+            echo "Using AOSP Clang mirror..."
+            CLANG_URL=$(curl -fsSL https://api.github.com/repos/bachnxuan/aosp_clang_mirror/releases/latest | grep "browser_download_url" | grep -E 'clang-.*\.tar\.gz' | head -n 1 | cut -d '"' -f 4)
+            echo "Downloading: $CLANG_URL"
+            curl -L "$CLANG_URL" -o clang.tar.gz
+            tar -C clang -xf clang.tar.gz
+            rm -f clang.tar.gz
+          else
+            echo "Using Neutron Clang..."
+            CLANG_URL=$(curl -fsSL https://api.github.com/repos/Neutron-Toolchains/clang-build-catalogue/releases/latest | grep "browser_download_url" | grep "neutron-clang" | head -n 1 | cut -d '"' -f 4)
+            echo "Downloading: $CLANG_URL"
+            curl -L "$CLANG_URL" -o neutron-clang.tar.zst
+            tar -C clang -xf neutron-clang.tar.zst
+            rm -f neutron-clang.tar.zst
+          fi
+
+          echo "CLANG_PATH=$GITHUB_WORKSPACE/clang" >> "$GITHUB_ENV"
+          echo "Compiler version:"
+          "$GITHUB_WORKSPACE/clang/bin/clang" --version | head -n 1
+          "$GITHUB_WORKSPACE/clang/bin/ld.lld" --version | head -n 1
 
       - name: Clone Kernel Source (LineageOS SM8450)
         run: |
@@ -85,14 +99,20 @@ jobs:
             curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
           fi
 
-      - name: Build Kernel Image
+      - name: 🛠️ Build Kernel
+        shell: bash
         run: |
+          set -e
           cd kernel-source
-          export PATH="${GITHUB_WORKSPACE}/clang/bin:${PATH}"
+          export PATH="${CLANG_PATH}/bin:${PATH}"
           export ARCH=arm64
           export SUBARCH=arm64
-          export KBUILD_BUILD_USER="carbon"
-          export KBUILD_BUILD_HOST="github-actions"
+          export KBUILD_BUILD_USER=hrihq
+          export KBUILD_BUILD_HOST=LineageOS
+          export LLVM=1
+          export LLVM_IAS=1
+          export CC=clang
+          export LD=ld.lld
 
           # 1. Base GKI defconfig
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 gki_defconfig
@@ -103,40 +123,33 @@ jobs:
             arch/arm64/configs/vendor/xiaomi_GKI.config \
             arch/arm64/configs/vendor/cupid_GKI.config
 
-          # 3. Enable KernelSU if selected
+          # 3. KernelSU flag
           if [ "${{ inputs.ksu_variant }}" != "none" ]; then
             ./scripts/config --file out/.config -e KSU
           fi
 
-          # 4. Set Carbon branding in kernel localversion
+          # 4. Brand localversion
           ./scripts/config --file out/.config --set-str LOCALVERSION "-Carbon-cupid"
-
-          # 5. Configure LTO
-          if [ "${{ inputs.lto }}" = "none" ]; then
-            ./scripts/config --file out/.config -d LTO_CLANG -d LTO_CLANG_THIN -d LTO_CLANG_FULL -e LTO_NONE
-          else
-            ./scripts/config --file out/.config -d LTO_NONE -d LTO_CLANG_FULL -e LTO_CLANG -e LTO_CLANG_THIN
-          fi
 
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 olddefconfig
 
-          # Cap parallel ThinLTO jobs to prevent runner link OOM
-          wrapper="${GITHUB_WORKSPACE}/ld-thinlto-wrapper"
-          printf '#!/bin/bash\nexec ld.lld "$@" --thinlto-jobs=2\n' > "${wrapper}"
-          chmod +x "${wrapper}"
-          export LD="${wrapper}"
-          export HOSTLD="${wrapper}"
-
           # Build Image
-          make -j2 O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 Image
+          make -j"$(nproc --all)" O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 Image
 
           if [ ! -s out/arch/arm64/boot/Image ]; then
             echo "::error::Built Image not found!"
             exit 1
           fi
           ls -lh out/arch/arm64/boot/Image
+          cp out/.config out/carbon_defconfig.txt
 
-      - name: Package AnyKernel3 ZIP
+      - name: 💾 Upload Config
+        uses: actions/upload-artifact@v4
+        with:
+          name: configs-${{ env.BUILD_TIME }}
+          path: kernel-source/out/carbon_defconfig.txt
+
+      - name: 📂 Package AnyKernel3 ZIP
         run: |
           mkdir -p ak3-pkg
           git clone --depth=1 https://github.com/osm0sis/AnyKernel3.git ak3-pkg
@@ -144,7 +157,7 @@ jobs:
           cp ak3/banner ak3-pkg/banner
           cp kernel-source/out/arch/arm64/boot/Image ak3-pkg/Image
 
-          ZIP_NAME="Carbon-Kernel-cupid-${{ inputs.ksu_variant }}-r${{ github.run_number }}.zip"
+          ZIP_NAME="Carbon-Kernel-cupid-${{ inputs.ksu_variant }}-${BUILD_TIME}.zip"
           cd ak3-pkg
           zip -r9 "../${ZIP_NAME}" . -x ".git/*" "README.md"
           cd ..
@@ -157,20 +170,20 @@ jobs:
           mv "${ZIP_NAME}.sha256" release-pkg/
           cp kernel-source/out/arch/arm64/boot/Image release-pkg/Image-cupid
 
-      - name: Upload Artifact
+      - name: 📤 Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Carbon-Kernel-cupid-${{ inputs.ksu_variant }}-r${{ github.run_number }}
+          name: Carbon-Kernel-cupid-${{ inputs.ksu_variant }}
           path: release-pkg/*
 
-      - name: Create GitHub Release
+      - name: 🚀 Publish GitHub Release
         if: ${{ inputs.create_release }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG_NAME="v1.0-r${{ github.run_number }}"
-          RELEASE_TITLE="Carbon Kernel v1.0 (cupid) - KernelSU-${{ inputs.ksu_variant }}"
-          gh release create "${TAG_NAME}" \
+          REL_TAG="v1.0-${BUILD_TIME}"
+          RELEASE_TITLE="Carbon Kernel ${REL_TAG} (cupid) - KernelSU-${{ inputs.ksu_variant }}"
+          gh release create "${REL_TAG}" \
             release-pkg/* \
             --title "${RELEASE_TITLE}" \
-            --notes "Carbon Kernel for Xiaomi 12 (cupid / SM8450) with KernelSU-${{ inputs.ksu_variant }}"
+            --notes "Carbon Kernel for Xiaomi 12 (cupid / SM8450) with KernelSU-${{ inputs.ksu_variant }} (SHA256: ${{ env.ZIP_SHA256 }})"
