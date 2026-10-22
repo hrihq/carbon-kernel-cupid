@@ -14,7 +14,7 @@ supported.patchlevels=
 '; }
 
 BLOCK=boot;
-IS_SLOT_DEVICE=auto;
+IS_SLOT_DEVICE=1;
 RAMDISK_COMPRESSION=auto;
 PATCH_VBMETA_FLAG=auto;
 
@@ -22,7 +22,6 @@ PATCH_VBMETA_FLAG=auto;
 
 ui_print " ";
 ui_print "Carbon Kernel - Xiaomi 12 (cupid)";
-ui_print "Preserving ROM first-stage ramdisk and vbmeta headers...";
 
-dump_boot;
-write_boot;
+split_boot;
+flash_boot;

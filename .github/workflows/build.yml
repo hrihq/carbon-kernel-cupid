@@ -15,14 +15,6 @@ on:
           - "next"
           - "official"
           - "none"
-      compiler:
-        description: "Select Compiler"
-        required: true
-        default: "AOSP-Clang"
-        type: choice
-        options:
-          - "AOSP-Clang"
-          - "Neutron-Clang"
       create_release:
         description: "Create GitHub Release"
         type: boolean
@@ -60,25 +52,15 @@ jobs:
           set -e
           mkdir -p clang
 
-          if [[ "${{ github.event.inputs.compiler }}" == "Neutron-Clang" ]]; then
-            echo "Using Neutron Clang..."
-            CLANG_URL=$(curl -fsSL https://api.github.com/repos/Neutron-Toolchains/clang-build-catalogue/releases/latest | grep "browser_download_url" | grep "neutron-clang" | head -n 1 | cut -d '"' -f 4)
-            echo "Downloading: $CLANG_URL"
-            curl -L "$CLANG_URL" -o neutron-clang.tar.zst
-            tar -C clang -xf neutron-clang.tar.zst
-            rm -f neutron-clang.tar.zst
-          else
-            echo "Using Google Android Clang r416183b (Clang 12.0.5 - Official ACK / LineageOS 24)..."
-            toolchain_repo="${RUNNER_TEMP}/android-clang-repo"
-            rm -rf "${toolchain_repo}"
-            git clone --filter=blob:none --no-checkout --depth=1 \
-              --branch master-kernel-build-2021 \
-              https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 "${toolchain_repo}"
-            git -C "${toolchain_repo}" sparse-checkout set clang-r416183b
-            git -C "${toolchain_repo}" checkout -q --detach 6e3223f76384455acde43affde3df0ea9df66c0d
-            mv "${toolchain_repo}/clang-r416183b"/* clang/
-            rm -rf "${toolchain_repo}"
-          fi
+          echo "Using Google Android Clang r596125 (Clang 22.0.2 - Official Android 17 / Infinity-X 4.1 Toolchain)..."
+          toolchain_repo="${RUNNER_TEMP}/android-clang-repo"
+          rm -rf "${toolchain_repo}"
+          git clone --filter=blob:none --no-checkout --depth=1 \
+            https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 "${toolchain_repo}"
+          git -C "${toolchain_repo}" sparse-checkout set clang-r596125
+          git -C "${toolchain_repo}" checkout -q
+          mv "${toolchain_repo}/clang-r596125"/* clang/
+          rm -rf "${toolchain_repo}"
 
           echo "CLANG_PATH=$GITHUB_WORKSPACE/clang" >> "$GITHUB_ENV"
           echo "Compiler version:"
@@ -144,19 +126,13 @@ jobs:
           # 4. Brand localversion
           ./scripts/config --file out/.config --set-str LOCALVERSION "-Carbon-cupid"
 
-          # 5. ThinLTO config with 2 parallel threads wrapper to prevent link OOM
-          ./scripts/config --file out/.config -d LTO_NONE -d LTO_CLANG_FULL -e LTO_CLANG -e LTO_CLANG_THIN
+          # 5. Full LTO config (Matched with AlphaCore & Android 17 stock build)
+          ./scripts/config --file out/.config -d LTO_NONE -d LTO_CLANG_THIN -e LTO_CLANG -e LTO_CLANG_FULL
 
-          # 6. Restored modular ZRAM/ZSMALLOC to prevent early-init ramdisk conflicts on Android 16/17
+          # 6. Restored modular ZRAM/ZSMALLOC
           ./scripts/config --file out/.config -m ZRAM -m ZSMALLOC
 
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 olddefconfig
-
-          wrapper="${GITHUB_WORKSPACE}/ld-thinlto-wrapper"
-          printf '#!/bin/bash\nexec ld.lld "$@" --thinlto-jobs=2\n' > "${wrapper}"
-          chmod +x "${wrapper}"
-          export LD="${wrapper}"
-          export HOSTLD="${wrapper}"
 
           # Build Image (cap jobs to 2 during linking to avoid OOM killer)
           make -j2 O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 Image
