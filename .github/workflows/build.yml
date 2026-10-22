@@ -114,6 +114,14 @@ jobs:
           export CC=clang
           export LD=ld.lld
 
+          # Free runner disk & enable 16GB swap for ThinLTO linking
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost /usr/share/swift || true
+          sudo fallocate -l 16G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=16384
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+
           # 1. Base GKI defconfig
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 gki_defconfig
 
@@ -131,10 +139,18 @@ jobs:
           # 4. Brand localversion
           ./scripts/config --file out/.config --set-str LOCALVERSION "-Carbon-cupid"
 
+          # 5. ThinLTO config with 2 parallel threads wrapper to prevent link OOM
+          ./scripts/config --file out/.config -d LTO_NONE -d LTO_CLANG_FULL -e LTO_CLANG -e LTO_CLANG_THIN
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 olddefconfig
 
-          # Build Image
-          make -j"$(nproc --all)" O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 Image
+          wrapper="${GITHUB_WORKSPACE}/ld-thinlto-wrapper"
+          printf '#!/bin/bash\nexec ld.lld "$@" --thinlto-jobs=2\n' > "${wrapper}"
+          chmod +x "${wrapper}"
+          export LD="${wrapper}"
+          export HOSTLD="${wrapper}"
+
+          # Build Image (cap jobs to 2 during linking to avoid OOM killer)
+          make -j2 O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 Image
 
           if [ ! -s out/arch/arm64/boot/Image ]; then
             echo "::error::Built Image not found!"
