@@ -9,21 +9,19 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@500;700;800&display=swap" rel="stylesheet">
   
   <style>
     :root {
       --bg: #000000;
-      --card-bg: rgba(18, 18, 18, 0.7);
-      --card-border: rgba(255, 255, 255, 0.12);
-      --card-hover: rgba(30, 30, 30, 0.85);
-      --glass-nav: rgba(10, 10, 10, 0.78);
-      --text-main: #ffffff;
-      --text-muted: #8e8e93;
-      --text-dim: #636366;
-      --border-subtle: rgba(255, 255, 255, 0.08);
-      --accent: #ffffff;
-      --accent-dim: #d1d1d6;
+      --card: rgba(14, 14, 14, 0.65);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --card-hover: rgba(24, 24, 24, 0.85);
+      --glass-nav: rgba(10, 10, 10, 0.72);
+      --text: #ffffff;
+      --text-muted: #a1a1aa;
+      --text-dim: #71717a;
+      --border-subtle: rgba(255, 255, 255, 0.06);
     }
 
     * {
@@ -39,13 +37,13 @@
 
     body {
       background-color: var(--bg);
-      color: var(--text-main);
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       overflow-x: hidden;
-      line-height: 1.6;
+      line-height: 1.65;
     }
 
-    /* Interactive 3D Physics Black Hole Canvas */
+    /* Ambient Gravitational Accretion Disk Canvas */
     #blackhole-canvas {
       position: fixed;
       top: 0;
@@ -54,28 +52,27 @@
       height: 100vh;
       z-index: -1;
       pointer-events: all;
-      cursor: crosshair;
     }
 
     /* Liquid Glassmorphism Navbar */
     .glass-nav {
       position: fixed;
-      top: 24px;
+      top: 22px;
       left: 50%;
       transform: translateX(-50%);
       width: 90%;
-      max-width: 980px;
+      max-width: 960px;
       background: var(--glass-nav);
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
       border: 1px solid var(--card-border);
       border-radius: 9999px;
-      padding: 12px 28px;
+      padding: 10px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       z-index: 100;
-      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.15);
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
@@ -85,11 +82,10 @@
       gap: 12px;
       text-decoration: none;
       color: #fff;
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Syne', sans-serif;
       font-weight: 700;
-      font-size: 1.1rem;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
     }
 
     .nav-brand img {
@@ -97,20 +93,20 @@
       height: 28px;
       border-radius: 6px;
       object-fit: cover;
-      filter: grayscale(100%) contrast(150%);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      filter: grayscale(100%);
+      border: 1px solid rgba(255, 255, 255, 0.25);
     }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 32px;
+      gap: 30px;
     }
 
     .nav-links a {
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 500;
       transition: color 0.2s, transform 0.2s;
     }
@@ -122,8 +118,8 @@
     .btn-nav-download {
       background: #ffffff;
       color: #000000;
-      font-weight: 700;
-      padding: 8px 20px;
+      font-weight: 600;
+      padding: 8px 18px;
       border-radius: 9999px;
       text-decoration: none;
       font-size: 0.85rem;
@@ -131,44 +127,42 @@
     }
 
     .btn-nav-download:hover {
-      background: #e5e5ea;
-      transform: scale(1.04);
+      background: #e4e4e7;
+      transform: scale(1.03);
     }
 
     /* Container */
     .container {
-      max-width: 1060px;
+      max-width: 1040px;
       margin: 0 auto;
       padding: 0 24px;
     }
 
     /* Hero Section */
     .hero {
-      min-height: 92vh;
+      min-height: 94vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
-      padding: 140px 0 60px;
+      padding: 130px 0 50px;
       position: relative;
     }
 
     .badge-capsule {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.16);
       border-radius: 9999px;
       padding: 6px 18px;
       font-size: 0.8rem;
-      font-weight: 600;
-      color: #ffffff;
-      margin-bottom: 28px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 500;
+      color: #e4e4e7;
+      margin-bottom: 24px;
+      letter-spacing: 0.02em;
     }
 
     .badge-pulse {
@@ -176,32 +170,31 @@
       height: 6px;
       border-radius: 50%;
       background: #ffffff;
-      box-shadow: 0 0 10px #ffffff;
+      box-shadow: 0 0 8px #ffffff;
     }
 
     .hero-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: clamp(3rem, 8vw, 5.8rem);
-      font-weight: 700;
-      line-height: 1.02;
-      letter-spacing: -0.04em;
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(3rem, 7.5vw, 5.4rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.035em;
       margin-bottom: 20px;
-      text-transform: uppercase;
       color: #ffffff;
     }
 
     .hero-sub {
-      font-size: clamp(1rem, 2vw, 1.2rem);
+      font-size: clamp(1rem, 2vw, 1.18rem);
       color: var(--text-muted);
-      max-width: 620px;
-      margin-bottom: 40px;
+      max-width: 580px;
+      margin-bottom: 38px;
       font-weight: 400;
       line-height: 1.7;
     }
 
     .hero-actions {
       display: flex;
-      gap: 16px;
+      gap: 14px;
       flex-wrap: wrap;
       justify-content: center;
     }
@@ -209,8 +202,8 @@
     .btn-hero-main {
       background: #ffffff;
       color: #000000;
-      font-weight: 700;
-      padding: 14px 34px;
+      font-weight: 600;
+      padding: 14px 32px;
       border-radius: 14px;
       text-decoration: none;
       font-size: 0.95rem;
@@ -218,16 +211,16 @@
     }
 
     .btn-hero-main:hover {
-      background: #e5e5ea;
+      background: #e4e4e7;
       transform: translateY(-2px);
       box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2);
     }
 
     .btn-hero-alt {
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.05);
       color: #ffffff;
-      font-weight: 600;
-      padding: 14px 28px;
+      font-weight: 500;
+      padding: 14px 26px;
       border-radius: 14px;
       text-decoration: none;
       border: 1px solid var(--card-border);
@@ -237,8 +230,8 @@
     }
 
     .btn-hero-alt:hover {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
       transform: translateY(-2px);
     }
 
@@ -248,53 +241,57 @@
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 16px;
       width: 100%;
-      margin-top: 64px;
+      margin-top: 60px;
     }
 
     .stat-card {
-      background: var(--card-bg);
+      background: var(--card);
       border: 1px solid var(--card-border);
       border-radius: 20px;
-      padding: 24px;
+      padding: 22px 24px;
       backdrop-filter: blur(16px);
       text-align: left;
       transition: all 0.3s;
     }
 
     .stat-card:hover {
-      border-color: rgba(255, 255, 255, 0.35);
+      border-color: rgba(255, 255, 255, 0.3);
       background: var(--card-hover);
       transform: translateY(-3px);
     }
 
     .stat-num {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 2.4rem;
+      font-family: 'Syne', sans-serif;
+      font-size: 2.2rem;
       font-weight: 700;
       color: #ffffff;
       display: flex;
       align-items: baseline;
       gap: 4px;
+      letter-spacing: -0.02em;
     }
 
     .stat-num span {
       color: var(--text-muted);
-      font-size: 1.1rem;
+      font-size: 1rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 500;
     }
 
     .stat-label {
       color: var(--text-muted);
       font-size: 0.85rem;
       margin-top: 4px;
+      font-weight: 400;
     }
 
-    /* Interactive Interactive Hardware Switcher Demo */
+    /* Interactive Hardware Switcher Demo */
     .interactive-dock {
-      margin-top: 48px;
-      background: var(--card-bg);
+      margin-top: 44px;
+      background: var(--card);
       border: 1px solid var(--card-border);
       border-radius: 24px;
-      padding: 32px;
+      padding: 30px;
       backdrop-filter: blur(20px);
       width: 100%;
       text-align: left;
@@ -302,10 +299,10 @@
 
     .dock-tabs {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       border-bottom: 1px solid var(--border-subtle);
-      padding-bottom: 16px;
-      margin-bottom: 24px;
+      padding-bottom: 14px;
+      margin-bottom: 20px;
       flex-wrap: wrap;
     }
 
@@ -313,11 +310,10 @@
       background: transparent;
       border: 1px solid transparent;
       color: var(--text-muted);
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 600;
-      padding: 8px 18px;
-      border-radius: 12px;
+      padding: 8px 16px;
+      border-radius: 10px;
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -342,68 +338,67 @@
 
     /* Sections */
     .section {
-      padding: 100px 0;
+      padding: 90px 0;
     }
 
     .section-header {
       text-align: center;
-      margin-bottom: 60px;
+      margin-bottom: 50px;
     }
 
     .section-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: clamp(2.2rem, 5vw, 3.2rem);
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 4vw, 2.8rem);
       font-weight: 700;
       letter-spacing: -0.03em;
-      text-transform: uppercase;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .section-desc {
       color: var(--text-muted);
-      max-width: 580px;
+      max-width: 540px;
       margin: 0 auto;
       font-size: 0.95rem;
     }
 
-    /* Monolith Grid Cards */
+    /* Features Grid */
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 20px;
     }
 
     .feat-box {
-      background: var(--card-bg);
+      background: var(--card);
       border: 1px solid var(--card-border);
-      border-radius: 22px;
-      padding: 32px;
+      border-radius: 20px;
+      padding: 28px;
       backdrop-filter: blur(16px);
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .feat-box:hover {
       background: var(--card-hover);
-      border-color: rgba(255, 255, 255, 0.4);
-      transform: translateY(-4px);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-3px);
     }
 
     .feat-tag {
-      font-family: 'Space Grotesk', sans-serif;
       font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
+      font-weight: 600;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
       color: var(--text-dim);
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
     .feat-title {
+      font-family: 'Syne', sans-serif;
       font-size: 1.25rem;
       font-weight: 700;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       color: #ffffff;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
     }
 
     .feat-desc {
@@ -412,23 +407,23 @@
       line-height: 1.6;
     }
 
-    /* Release Box & Banner Showcase */
+    /* Release Showcase */
     .release-monolith {
-      background: var(--card-bg);
+      background: var(--card);
       border: 1px solid var(--card-border);
-      border-radius: 28px;
-      padding: 36px;
+      border-radius: 26px;
+      padding: 32px;
       backdrop-filter: blur(20px);
       display: grid;
-      grid-template-columns: 1.1fr 1fr;
-      gap: 36px;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
       align-items: center;
       margin-bottom: 40px;
     }
 
     .release-banner-frame {
       width: 100%;
-      border-radius: 18px;
+      border-radius: 16px;
       overflow: hidden;
       border: 1px solid var(--card-border);
       background: #000;
@@ -449,15 +444,15 @@
     .timeline-stack {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
 
     .timeline-row {
       display: flex;
       align-items: flex-start;
-      gap: 16px;
+      gap: 14px;
       padding: 16px;
-      border-radius: 16px;
+      border-radius: 14px;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid var(--border-subtle);
     }
@@ -465,7 +460,7 @@
     .badge-ver {
       background: #ffffff;
       color: #000000;
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Syne', sans-serif;
       font-weight: 700;
       padding: 4px 10px;
       border-radius: 6px;
@@ -474,31 +469,31 @@
 
     /* Developer Portfolio Card */
     .dev-profile-block {
-      background: var(--card-bg);
+      background: var(--card);
       border: 1px solid var(--card-border);
-      border-radius: 28px;
-      padding: 44px;
+      border-radius: 26px;
+      padding: 40px;
       backdrop-filter: blur(20px);
     }
 
     .dev-top {
       display: flex;
       align-items: center;
-      gap: 24px;
-      margin-bottom: 24px;
+      gap: 20px;
+      margin-bottom: 20px;
     }
 
     .dev-img {
-      width: 76px;
-      height: 76px;
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
       filter: grayscale(100%);
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
     .dev-name {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.8rem;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.7rem;
       font-weight: 700;
       letter-spacing: -0.02em;
       color: #fff;
@@ -506,32 +501,30 @@
 
     .dev-role {
       color: var(--text-muted);
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      font-weight: 600;
+      font-size: 0.85rem;
+      font-weight: 500;
     }
 
     .dev-text {
       color: var(--text-muted);
       font-size: 0.95rem;
       line-height: 1.7;
-      max-width: 720px;
-      margin-bottom: 32px;
+      max-width: 680px;
+      margin-bottom: 28px;
     }
 
     .portfolio-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-      margin-top: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 14px;
+      margin-top: 18px;
     }
 
     .port-card {
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid var(--border-subtle);
-      border-radius: 16px;
-      padding: 20px;
+      border-radius: 14px;
+      padding: 18px;
       text-decoration: none;
       color: inherit;
       transition: all 0.25s;
@@ -539,17 +532,18 @@
 
     .port-card:hover {
       background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(255, 255, 255, 0.4);
+      border-color: rgba(255, 255, 255, 0.3);
       transform: translateY(-2px);
     }
 
     .port-title {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Syne', sans-serif;
       font-weight: 700;
       color: #ffffff;
       margin-bottom: 6px;
       display: flex;
       justify-content: space-between;
+      font-size: 0.95rem;
     }
 
     .port-desc {
@@ -562,12 +556,11 @@
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
-      margin-top: 14px;
+      margin-top: 12px;
     }
 
     .port-tag {
       font-size: 0.7rem;
-      font-family: 'Space Grotesk', sans-serif;
       padding: 2px 8px;
       border-radius: 6px;
       background: rgba(255, 255, 255, 0.06);
@@ -578,23 +571,23 @@
     .terminal-box {
       background: #000000;
       border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 20px;
+      border-radius: 14px;
+      padding: 18px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 0.85rem;
-      color: #d1d1d6;
+      color: #d4d4d8;
       line-height: 1.6;
     }
 
     .terminal-header {
       display: flex;
       gap: 8px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .terminal-dot {
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.2);
     }
@@ -602,7 +595,7 @@
     /* Footer */
     footer {
       border-top: 1px solid var(--border-subtle);
-      padding: 48px 0;
+      padding: 44px 0;
       text-align: center;
       color: var(--text-dim);
       font-size: 0.85rem;
@@ -637,7 +630,7 @@
 </head>
 <body>
 
-  <!-- Interactive 3D Spinning Black Hole Canvas -->
+  <!-- Hypnotic Gravitational Black Hole Accretion Disk Canvas -->
   <canvas id="blackhole-canvas"></canvas>
 
   <!-- Liquid Glass Navbar -->
@@ -663,7 +656,7 @@
     </div>
     <h1 class="hero-title">Carbon Kernel</h1>
     <p class="hero-sub">
-      A surgical, monochrome GKI Linux 5.10 custom kernel engineered for Snapdragon 8 Gen 1. Built with KernelSU-Next, SUSFS v2.3.0, and low-level thermal protections.
+      A refined, monochrome GKI Linux 5.10 custom kernel engineered for Snapdragon 8 Gen 1. Built with KernelSU-Next, SUSFS v2.3.0, and hardware thermal management.
     </p>
     <div class="hero-actions">
       <a href="https://github.com/hrihq/carbon-kernel-cupid/releases/tag/v1.2" target="_blank" class="btn-hero-main">Download v1.2 Cygnus-X1</a>
@@ -690,7 +683,7 @@
       </div>
     </div>
 
-    <!-- Interactive Interactive Hardware Diagnostic Dock -->
+    <!-- Interactive Hardware Diagnostic Dock -->
     <div class="interactive-dock" id="demo">
       <div class="dock-tabs">
         <button class="dock-tab active" onclick="switchDock('charge')">Thermal Charge Floor</button>
@@ -838,7 +831,7 @@
         Focused on crafting high-performance Android kernels, embedded system enhancements, and responsive web applications. Maintainer of Carbon Kernel for Xiaomi 12 (cupid) and Glade Kernel for Redmi Note 12 Pro 4G (sweet2). Committed to hardware longevity, clean architecture, and minimal design.
       </p>
 
-      <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: #fff; font-size: 1.1rem; text-transform: uppercase;">
+      <div style="font-family: 'Syne', sans-serif; font-weight: 700; color: #fff; font-size: 1.1rem; letter-spacing: -0.01em;">
         Featured Engineering Projects
       </div>
 
@@ -903,147 +896,208 @@
     </div>
   </section>
 
-  <!-- Interactive 3D Spinning Black Hole Particle Physics Engine -->
+  
+  <!-- Luminous Relativistic Gravitational Black Hole Engine -->
   <script>
     const canvas = document.getElementById('blackhole-canvas');
     const ctx = canvas.getContext('2d');
     let width, height;
-    let particles = [];
-    let mouse = { x: null, y: null, targetX: null, targetY: null, isInteracting: false };
+    let rotation = 0;
+    let targetTiltX = 0;
+    let targetTiltY = 0;
+    let currentTiltX = 0;
+    let currentTiltY = 0;
 
     function resize() {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
-      mouse.targetX = width / 2;
-      mouse.targetY = height * 0.42;
-      if (!mouse.x) {
-        mouse.x = mouse.targetX;
-        mouse.y = mouse.targetY;
-      }
     }
     window.addEventListener('resize', resize);
     resize();
 
     window.addEventListener('mousemove', (e) => {
-      mouse.targetX = e.clientX;
-      mouse.targetY = e.clientY;
-      mouse.isInteracting = true;
+      targetTiltX = (e.clientX - width / 2) / width;
+      targetTiltY = (e.clientY - height / 2) / height;
     });
 
     window.addEventListener('touchmove', (e) => {
       if (e.touches.length > 0) {
-        mouse.targetX = e.touches[0].clientX;
-        mouse.targetY = e.touches[0].clientY;
-        mouse.isInteracting = true;
+        targetTiltX = (e.touches[0].clientX - width / 2) / width;
+        targetTiltY = (e.touches[0].clientY - height / 2) / height;
       }
     }, { passive: true });
 
-    class AccretionParticle {
-      constructor() {
-        this.reset(true);
-      }
+    function renderLuminousBlackHole() {
+      // Very gentle, slow majestic celestial rotation
+      rotation += 0.0015;
 
-      reset(init = false) {
-        this.angle = Math.random() * Math.PI * 2;
-        // distance from event horizon center
-        this.dist = init 
-          ? Math.random() * (Math.min(width, height) * 0.48) + 75
-          : Math.min(width, height) * 0.48 + Math.random() * 80;
-        
-        // orbital speed increases closer to singularity (Keplerian physics approximation)
-        this.speed = (1 / Math.sqrt(this.dist)) * 1.8 + Math.random() * 0.003;
-        this.size = Math.random() * 1.6 + 0.6;
-        
-        // Pure monochrome palette: shades of pure white and subtle silver
-        const brightness = Math.floor(Math.random() * 105 + 150);
-        this.baseColor = `rgba(${brightness}, ${brightness}, ${brightness}, `;
-        this.alpha = Math.random() * 0.6 + 0.2;
-      }
+      currentTiltX += (targetTiltX - currentTiltX) * 0.03;
+      currentTiltY += (targetTiltY - currentTiltY) * 0.03;
 
-      update(cx, cy) {
-        this.angle += this.speed;
-        // Inward gravitational pull
-        this.dist -= 0.22;
+      const cx = width / 2 + currentTiltX * 35;
+      const cy = height * 0.38 + currentTiltY * 25;
 
-        if (this.dist < 65) {
-          this.reset(false);
-        }
-      }
-
-      draw(cx, cy) {
-        // Perspective angle tilt (accretion disk plane)
-        const rx = this.dist;
-        const ry = this.dist * 0.38;
-
-        const x = cx + Math.cos(this.angle) * rx;
-        const y = cy + Math.sin(this.angle) * ry;
-
-        // Gravitational lensing warp effect around photon sphere
-        const dCenter = Math.hypot(x - cx, y - cy);
-        let renderAlpha = this.alpha;
-        if (dCenter < 90) {
-          renderAlpha *= (dCenter - 65) / 25;
-        }
-
-        ctx.fillStyle = this.baseColor + Math.max(0, renderAlpha) + ')';
-        ctx.beginPath();
-        ctx.arc(x, y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // Spawn 280 physics particles
-    for (let i = 0; i < 280; i++) {
-      particles.push(new AccretionParticle());
-    }
-
-    let currentCx = width / 2;
-    let currentCy = height * 0.42;
-
-    function animate() {
-      // Smooth camera interpolation towards user interaction
-      const targetCx = mouse.isInteracting ? mouse.targetX * 0.25 + (width / 2) * 0.75 : width / 2;
-      const targetCy = mouse.isInteracting ? mouse.targetY * 0.25 + (height * 0.42) * 0.75 : height * 0.42;
-      
-      currentCx += (targetCx - currentCx) * 0.05;
-      currentCy += (targetCy - currentCy) * 0.05;
-
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+      ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, width, height);
 
-      // Event Horizon core shadow (Pure black singularity)
-      const grad = ctx.createRadialGradient(currentCx, currentCy, 20, currentCx, currentCy, 75);
-      grad.addColorStop(0, '#000000');
-      grad.addColorStop(0.85, '#000000');
-      grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-
-      ctx.fillStyle = grad;
+      // 1. Deep Space Cosmic Fog (Soft volumetric outer bloom)
+      const cosmicBloom = ctx.createRadialGradient(cx, cy, 60, cx, cy, 420);
+      cosmicBloom.addColorStop(0, 'rgba(255, 255, 255, 0.22)');
+      cosmicBloom.addColorStop(0.2, 'rgba(230, 230, 235, 0.12)');
+      cosmicBloom.addColorStop(0.5, 'rgba(120, 120, 130, 0.04)');
+      cosmicBloom.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = cosmicBloom;
       ctx.beginPath();
-      ctx.arc(currentCx, currentCy, 75, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 420, 0, Math.PI * 2);
       ctx.fill();
 
-      // Photon ring outer glow (Monochrome wireframe ring)
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
-      ctx.lineWidth = 2;
+      // 2. Gravitational Upper Lensing Halo (The iconic curved arch over the black hole)
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(currentTiltX * 0.1);
+
+      // Layered blurred optical glows for upper halo
+      const haloWidth = 240;
+      const haloHeight = 175;
+
+      // Outer soft halo
+      const upperHaloOuter = ctx.createRadialGradient(0, -25, 70, 0, -35, 220);
+      upperHaloOuter.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+      upperHaloOuter.addColorStop(0.4, 'rgba(255, 255, 255, 0.18)');
+      upperHaloOuter.addColorStop(0.8, 'rgba(255, 255, 255, 0.04)');
+      upperHaloOuter.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+      ctx.fillStyle = upperHaloOuter;
       ctx.beginPath();
-      ctx.ellipse(currentCx, currentCy, 110, 42, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, -25, haloWidth, haloHeight, 0, Math.PI * 0.95, Math.PI * 2.05);
+      ctx.fill();
+
+      // Intense inner luminous crest (Doppler brightened on left side)
+      const crestGrad = ctx.createLinearGradient(-haloWidth * 0.8, -haloHeight, haloWidth * 0.8, -haloHeight);
+      crestGrad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+      crestGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.65)');
+      crestGrad.addColorStop(1, 'rgba(255, 255, 255, 0.25)');
+
+      ctx.strokeStyle = crestGrad;
+      ctx.lineWidth = 14;
+      ctx.beginPath();
+      ctx.ellipse(0, -20, 160, 125, 0, Math.PI * 1.05, Math.PI * 1.95);
       ctx.stroke();
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
-      ctx.lineWidth = 1;
+      // Core razor line
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+      ctx.lineWidth = 3.5;
+      ctx.stroke();
+      ctx.restore();
+
+      // 3. Lower Lensed Halo (Reflected beneath shadow)
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(currentTiltX * 0.1);
+
+      const bottomHalo = ctx.createRadialGradient(0, 20, 70, 0, 30, 180);
+      bottomHalo.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+      bottomHalo.addColorStop(0.5, 'rgba(255, 255, 255, 0.09)');
+      bottomHalo.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+      ctx.fillStyle = bottomHalo;
       ctx.beginPath();
-      ctx.ellipse(currentCx, currentCy, 160, 60, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 20, 220, 130, 0, 0.05, Math.PI * 0.95);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.ellipse(0, 18, 150, 95, 0, Math.PI * 0.12, Math.PI * 0.88);
+      ctx.stroke();
+      ctx.restore();
+
+      // 4. Main Horizontal Relativistic Accretion Belt (Thick luminous light stream)
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(currentTiltX * 0.18 + Math.sin(rotation) * 0.02);
+
+      const diskRadiusX = Math.min(width * 0.46, 380);
+      const diskRadiusY = diskRadiusX * 0.22;
+
+      // Broad diffuse light belt
+      const diskDiffuse = ctx.createRadialGradient(0, 0, 80, 0, 0, diskRadiusX);
+      diskDiffuse.addColorStop(0, 'rgba(255, 255, 255, 0.55)');
+      diskDiffuse.addColorStop(0.35, 'rgba(255, 255, 255, 0.28)');
+      diskDiffuse.addColorStop(0.75, 'rgba(255, 255, 255, 0.08)');
+      diskDiffuse.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+      ctx.fillStyle = diskDiffuse;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, diskRadiusX, diskRadiusY, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Dense glowing core light stream
+      const diskCore = ctx.createLinearGradient(-diskRadiusX, 0, diskRadiusX, 0);
+      diskCore.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
+      diskCore.addColorStop(0.3, 'rgba(255, 255, 255, 0.85)');
+      diskCore.addColorStop(0.7, 'rgba(255, 255, 255, 0.7)');
+      diskCore.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+
+      ctx.strokeStyle = diskCore;
+      ctx.lineWidth = 26;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, diskRadiusX * 0.82, diskRadiusY * 0.85, 0, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Render all active particles
-      particles.forEach(p => {
-        p.update(currentCx, currentCy);
-        p.draw(currentCx, currentCy);
-      });
+      // Intense focal stream
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+      ctx.lineWidth = 4.5;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, diskRadiusX * 0.82, diskRadiusY * 0.85, 0, 0, Math.PI * 2);
+      ctx.stroke();
 
-      requestAnimationFrame(animate);
+      ctx.restore();
+
+      // 5. The Event Horizon (Pure Absolute Pitch-Black Singularity)
+      const shadowRadius = 82;
+      const coreShadow = ctx.createRadialGradient(cx, cy, 20, cx, cy, shadowRadius);
+      coreShadow.addColorStop(0, '#000000');
+      coreShadow.addColorStop(0.96, '#000000');
+      coreShadow.addColorStop(1, 'rgba(0, 0, 0, 0.92)');
+
+      ctx.fillStyle = coreShadow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, shadowRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 6. Razor-sharp Photon Sphere boundary (Bright pure white ring edge)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, shadowRadius + 1, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 7. Foreground Front-Pass of the Accretion Disk (Crossing in front of the black hole)
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(currentTiltX * 0.18 + Math.sin(rotation) * 0.02);
+
+      // Glowing soft beam
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+      ctx.lineWidth = 20;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, diskRadiusX * 0.82, diskRadiusY * 0.85, 0, 0, Math.PI);
+      ctx.stroke();
+
+      // High-intensity white core crossing front
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, diskRadiusX * 0.82, diskRadiusY * 0.85, 0, 0, Math.PI);
+      ctx.stroke();
+
+      ctx.restore();
+
+      requestAnimationFrame(renderLuminousBlackHole);
     }
-    animate();
+
+    renderLuminousBlackHole();
 
     // Tab switcher logic
     function switchDock(tabId) {
