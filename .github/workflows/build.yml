@@ -110,30 +110,17 @@ jobs:
           free -h
 
           # 1. Base GKI defconfig
-          make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 gki_defconfig
+          # 1. Load exact verified Infinity-X A17 defconfig (no debugfs/page_owner CRC mismatch)
+          cp ../arch/arm64/configs/carbon_cupid_defconfig arch/arm64/configs/carbon_cupid_defconfig
+          make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 carbon_cupid_defconfig
 
-          # 2. Merge vendor fragments for cupid
-          ./scripts/kconfig/merge_config.sh -O out -m out/.config \
-            arch/arm64/configs/vendor/waipio_GKI.config \
-            arch/arm64/configs/vendor/xiaomi_GKI.config \
-            arch/arm64/configs/vendor/cupid_GKI.config
-
-          # Enable IPC, POSIX mqueue, Namespaces (Required for modern AOSP A16/A17 container & zygote boot)
-          ./scripts/config --file out/.config -e SYSVIPC -e POSIX_MQUEUE -e USER_NS -e PID_NS -e IPC_NS
-
-          # 3. KernelSU flag
+          # 2. KernelSU flag
           if [ "${{ inputs.ksu_variant }}" != "none" ]; then
             ./scripts/config --file out/.config -e KSU
           fi
 
-          # 4. Brand localversion
+          # 3. Brand localversion
           ./scripts/config --file out/.config --set-str LOCALVERSION "-Carbon-cupid"
-
-          # 5. Full LTO config (Matched with AlphaCore & Android 17 stock build)
-          ./scripts/config --file out/.config -d LTO_NONE -d LTO_CLANG_THIN -e LTO_CLANG -e LTO_CLANG_FULL
-
-          # 6. Restored modular ZRAM/ZSMALLOC
-          ./scripts/config --file out/.config -m ZRAM -m ZSMALLOC
 
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 olddefconfig
 
@@ -156,9 +143,7 @@ jobs:
       - name: 📂 Package AnyKernel3 ZIP
         run: |
           mkdir -p ak3-pkg
-          git clone --depth=1 https://github.com/osm0sis/AnyKernel3.git ak3-pkg
-          cp ak3/anykernel.sh ak3-pkg/anykernel.sh
-          cp ak3/banner ak3-pkg/banner
+          cp -r ak3/* ak3-pkg/
           cp kernel-source/out/arch/arm64/boot/Image ak3-pkg/Image
 
           ZIP_NAME="Carbon-Kernel-cupid-SagittariusA-${{ inputs.ksu_variant }}-${BUILD_TIME}.zip"
