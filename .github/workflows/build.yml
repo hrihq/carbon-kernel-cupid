@@ -79,8 +79,7 @@ jobs:
       - name: Apply Carbon v1.2 Tweaks (Charging Floor and WALT Scroll Cooling)
         run: |
           cd kernel-source
-          patch -p1 < ../patches/0001-carbon-v12-tweaks.patch
-          echo "Carbon v1.2 tweaks patch applied successfully!"
+          python3 ../scripts/apply_tweaks.py
 
       - name: Setup KernelSU-Next with SUSFS Support
         run: |
