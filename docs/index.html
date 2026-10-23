@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carbon Kernel | Xiaomi 12 (cupid)</title>
+  <meta name="description" content="Monochrome custom GKI Linux 5.10 kernel for Xiaomi 12 (cupid / SM8450) with KernelSU-Next, SUSFS, and thermal optimizations. By @kuroya14.">
+  <link rel="icon" type="image/jpeg" href="banner.jpg">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #000000;
+      --card-bg: rgba(18, 18, 18, 0.7);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --card-hover: rgba(30, 30, 30, 0.85);
+      --glass-nav: rgba(10, 10, 10, 0.78);
+      --text-main: #ffffff;
+      --text-muted: #8e8e93;
+      --text-dim: #636366;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --accent: #ffffff;
+      --accent-dim: #d1d1d6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Interactive 3D Physics Black Hole Canvas */
+    #blackhole-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      pointer-events: all;
+      cursor: crosshair;
+    }
+
+    /* Liquid Glassmorphism Navbar */
+    .glass-nav {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 980px;
+      background: var(--glass-nav);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border: 1px solid var(--card-border);
+      border-radius: 9999px;
+      padding: 12px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .nav-brand img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      object-fit: cover;
+      filter: grayscale(100%) contrast(150%);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s, transform 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: #fff;
+    }
+
+    .btn-nav-download {
+      background: #ffffff;
+      color: #000000;
+      font-weight: 700;
+      padding: 8px 20px;
+      border-radius: 9999px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .btn-nav-download:hover {
+      background: #e5e5ea;
+      transform: scale(1.04);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 140px 0 60px;
+      position: relative;
+    }
+
+    .badge-capsule {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 9999px;
+      padding: 6px 18px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 28px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .badge-pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 10px #ffffff;
+    }
+
+    .hero-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(3rem, 8vw, 5.8rem);
+      font-weight: 700;
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--text-muted);
+      max-width: 620px;
+      margin-bottom: 40px;
+      font-weight: 400;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-hero-main {
+      background: #ffffff;
+      color: #000000;
+      font-weight: 700;
+      padding: 14px 34px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-hero-main:hover {
+      background: #e5e5ea;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-hero-alt {
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+      font-weight: 600;
+      padding: 14px 28px;
+      border-radius: 14px;
+      text-decoration: none;
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      font-size: 0.95rem;
+      transition: all 0.25s;
+    }
+
+    .btn-hero-alt:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    /* Odometer Metric Cards */
+    .stats-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      width: 100%;
+      margin-top: 64px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px;
+      backdrop-filter: blur(16px);
+      text-align: left;
+      transition: all 0.3s;
+    }
+
+    .stat-card:hover {
+      border-color: rgba(255, 255, 255, 0.35);
+      background: var(--card-hover);
+      transform: translateY(-3px);
+    }
+
+    .stat-num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .stat-num span {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+
+    /* Interactive Interactive Hardware Switcher Demo */
+    .interactive-dock {
+      margin-top: 48px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 32px;
+      backdrop-filter: blur(20px);
+      width: 100%;
+      text-align: left;
+    }
+
+    .dock-tabs {
+      display: flex;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .dock-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 8px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .dock-tab.active {
+      background: #ffffff;
+      color: #000000;
+    }
+
+    .dock-tab:hover:not(.active) {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .dock-content {
+      display: none;
+    }
+
+    .dock-content.active {
+      display: block;
+    }
+
+    /* Sections */
+    .section {
+      padding: 100px 0;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.2rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .section-desc {
+      color: var(--text-muted);
+      max-width: 580px;
+      margin: 0 auto;
+      font-size: 0.95rem;
+    }
+
+    /* Monolith Grid Cards */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 20px;
+    }
+
+    .feat-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 22px;
+      padding: 32px;
+      backdrop-filter: blur(16px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .feat-box:hover {
+      background: var(--card-hover);
+      border-color: rgba(255, 255, 255, 0.4);
+      transform: translateY(-4px);
+    }
+
+    .feat-tag {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+    }
+
+    .feat-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+
+    .feat-desc {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* Release Box & Banner Showcase */
+    .release-monolith {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      padding: 36px;
+      backdrop-filter: blur(20px);
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 36px;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+
+    .release-banner-frame {
+      width: 100%;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      background: #000;
+    }
+
+    .release-banner-frame img {
+      width: 100%;
+      height: auto;
+      display: block;
+      filter: grayscale(100%);
+      transition: transform 0.4s;
+    }
+
+    .release-banner-frame:hover img {
+      transform: scale(1.02);
+    }
+
+    .timeline-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .timeline-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .badge-ver {
+      background: #ffffff;
+      color: #000000;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+    }
+
+    /* Developer Portfolio Card */
+    .dev-profile-block {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      padding: 44px;
+      backdrop-filter: blur(20px);
+    }
+
+    .dev-top {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .dev-img {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      filter: grayscale(100%);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .dev-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .dev-role {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .dev-text {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      max-width: 720px;
+      margin-bottom: 32px;
+    }
+
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .port-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 20px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.25s;
+    }
+
+    .port-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .port-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .port-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .port-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .port-tag {
+      font-size: 0.7rem;
+      font-family: 'Space Grotesk', sans-serif;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+    }
+
+    /* Terminal Simulation Box */
+    .terminal-box {
+      background: #000000;
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85rem;
+      color: #d1d1d6;
+      line-height: 1.6;
+    }
+
+    .terminal-header {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .terminal-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 48px 0;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-top: 80px;
+    }
+
+    footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: #fff;
+    }
+
+    @media (max-width: 768px) {
+      .release-monolith {
+        grid-template-columns: 1fr;
+      }
+      .nav-links {
+        display: none;
+      }
+      .dev-top {
+        flex-direction: column;
+        text-align: center;
+      }
+      .dev-text {
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Interactive 3D Spinning Black Hole Canvas -->
+  <canvas id="blackhole-canvas"></canvas>
+
+  <!-- Liquid Glass Navbar -->
+  <nav class="glass-nav">
+    <a href="#" class="nav-brand">
+      <img src="banner.jpg" alt="Carbon">
+      <span>Carbon Kernel</span>
+    </a>
+    <div class="nav-links">
+      <a href="#features">Architecture</a>
+      <a href="#demo">Diagnostics</a>
+      <a href="#releases">Releases</a>
+      <a href="#developer">Developer</a>
+    </div>
+    <a href="https://github.com/hrihq/carbon-kernel-cupid/releases" target="_blank" class="btn-nav-download">Download</a>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero container">
+    <div class="badge-capsule">
+      <span class="badge-pulse"></span>
+      Xiaomi 12 (cupid / SM8450)
+    </div>
+    <h1 class="hero-title">Carbon Kernel</h1>
+    <p class="hero-sub">
+      A surgical, monochrome GKI Linux 5.10 custom kernel engineered for Snapdragon 8 Gen 1. Built with KernelSU-Next, SUSFS v2.3.0, and low-level thermal protections.
+    </p>
+    <div class="hero-actions">
+      <a href="https://github.com/hrihq/carbon-kernel-cupid/releases/tag/v1.2" target="_blank" class="btn-hero-main">Download v1.2 Cygnus-X1</a>
+      <a href="https://t.me/CarbonKernelSGTA" target="_blank" class="btn-hero-alt">Channel @CarbonKernelSGTA</a>
+    </div>
+
+    <!-- Odometer Metrics -->
+    <div class="stats-card-grid">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-clock">3.0<span>GHz</span></div>
+        <div class="stat-label">Cortex-X2 Prime Ceiling</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">33<span>W+</span></div>
+        <div class="stat-label">Anti-2W Thermal Floor</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">100<span>%</span></div>
+        <div class="stat-label">Vendor Module ABI Match</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">v2.3<span>+</span></div>
+        <div class="stat-label">SUSFS Transparent Cloak</div>
+      </div>
+    </div>
+
+    <!-- Interactive Interactive Hardware Diagnostic Dock -->
+    <div class="interactive-dock" id="demo">
+      <div class="dock-tabs">
+        <button class="dock-tab active" onclick="switchDock('charge')">Thermal Charge Floor</button>
+        <button class="dock-tab" onclick="switchDock('scroll')">WALT Scroll Cooling</button>
+        <button class="dock-tab" onclick="switchDock('selector')">Recovery Dual-Selector</button>
+      </div>
+
+      <div class="dock-content active" id="tab-charge">
+        <div class="terminal-box">
+          <div class="terminal-header">
+            <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+          </div>
+          <div>[qti_battery_charger] Thermal condition evaluated. Device temperature: 43.5C</div>
+          <div>[qti_battery_charger] Standard kernel action: Throttle to Level 7 (500mA / 2.5W) [REJECTED]</div>
+          <div>[qti_battery_charger] Carbon Kernel Floor Policy: Clamp to Level 3 (2500mA / 18W-33W) [ENFORCED]</div>
+          <div style="color: #ffffff; font-weight: 600; margin-top: 6px;">Status: Fast charging sustained. Battery temperature protected. No trickle collapse.</div>
+        </div>
+      </div>
+
+      <div class="dock-content" id="tab-scroll">
+        <div class="terminal-box">
+          <div class="terminal-header">
+            <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+          </div>
+          <div>[walt] Touch input event received from touchscreen driver (ftm4)</div>
+          <div>[walt] sysctl_sched_min_task_util_for_boost = 100 (Default: 51)</div>
+          <div>[walt] Task util: 32 (Micro-scrolling thread). Dispatched to: Cluster 0 (Cortex-A510)</div>
+          <div>[walt] Prime core Cortex-X2 state: CPU7 Power Collapse Deep Sleep (0 MHz)</div>
+          <div style="color: #ffffff; font-weight: 600; margin-top: 6px;">Status: 120Hz smooth scrolling without waking hot Prime cluster. Zero heat buildup.</div>
+        </div>
+      </div>
+
+      <div class="dock-content" id="tab-selector">
+        <div class="terminal-box">
+          <div class="terminal-header">
+            <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+          </div>
+          <div>[AnyKernel3] Device verification: cupid (Xiaomi 12) confirmed.</div>
+          <div>[AnyKernel3] Select Kernel Variant (10s timeout):</div>
+          <div>[AnyKernel3] [Vol UP (+)]   : Root (KernelSU-Next v3.4.2 + SUSFS v2.3.0)</div>
+          <div>[AnyKernel3] [Vol DOWN (-)] : Non-Root (Vanilla Clean Stock + Auto Clean /data/adb)</div>
+          <div style="color: #ffffff; font-weight: 600; margin-top: 6px;">Status: Single universal flashable package. Switchable anytime in recovery.</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Features Section -->
+  <section id="features" class="section container">
+    <div class="section-header">
+      <h2 class="section-title">Architectural Precision</h2>
+      <p class="section-desc">Targeted kernel modifications addressing known Qualcomm Waipio bottlenecks.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feat-box">
+        <div class="feat-tag">Power Supply</div>
+        <h3 class="feat-title">Anti-2W Charge Floor</h3>
+        <p class="feat-desc">Prevents Qualcomm charging thermal throttling from dropping charging current to a 500mA (2W) trickle. Sustains fast charging reliably between 18W–33W even under warm device temperatures.</p>
+      </div>
+
+      <div class="feat-box">
+        <div class="feat-tag">WALT Scheduler</div>
+        <h3 class="feat-title">Scroll Cooling Engine</h3>
+        <p class="feat-desc">Boost util raised to 100 and colocation to 70. Light scrolling threads stay pinned to the efficient Cortex-A510 Little cluster. The hot Cortex-X2 Prime core sleeps until heavy games demand it.</p>
+      </div>
+
+      <div class="feat-box">
+        <div class="feat-tag">Root Security</div>
+        <h3 class="feat-title">KernelSU-Next & SUSFS</h3>
+        <p class="feat-desc">Integrated KernelSU-Next v3.4.2 paired with latest SUSFS v2.3.0 for transparent root cloaking. Keeps banking apps, Google Pay, and Play Integrity checks running without issues.</p>
+      </div>
+
+      <div class="feat-box">
+        <div class="feat-tag">Installer</div>
+        <h3 class="feat-title">Dual-Build Recovery Selector</h3>
+        <p class="feat-desc">Single universal flashable AnyKernel3 zip with volume key switcher: Vol UP for Root (KernelSU + SUSFS), Vol DOWN for 100% Stock Vanilla + auto wipe /data/adb.</p>
+      </div>
+
+      <div class="feat-box">
+        <div class="feat-tag">Networking</div>
+        <h3 class="feat-title">TCP BBR & FQ Queueing</h3>
+        <p class="feat-desc">Google BBR congestion control algorithm with Fair Queueing packet scheduling out-of-the-box for low bufferbloat and ultra-stable multiplayer gaming ping.</p>
+      </div>
+
+      <div class="feat-box">
+        <div class="feat-tag">Toolchain</div>
+        <h3 class="feat-title">Exact Vendor Module ABI</h3>
+        <p class="feat-desc">Built with Google Android Clang r596125 (Clang 22.0.2) and Full LTO. 100% symbol CRC match with official AOSP A16/A17 vendor display and touch drivers.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Releases & Showcase Section -->
+  <section id="releases" class="section container">
+    <div class="section-header">
+      <h2 class="section-title">Black Hole Release Series</h2>
+      <p class="section-desc">Each version codenamed after a cosmic gravitational singularity.</p>
+    </div>
+
+    <div class="release-monolith">
+      <div class="release-banner-frame">
+        <img src="banner.jpg" alt="Carbon Kernel Monochrome Accretion Disk">
+      </div>
+      <div class="timeline-stack">
+        <div class="timeline-row">
+          <div class="badge-ver">v1.2</div>
+          <div>
+            <h4 style="color: #fff; margin-bottom: 2px;">Cygnus-X1 (Latest)</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Charging floor against 2W drop, WALT scroll cooling, anti-stutter memory fixes.</p>
+          </div>
+        </div>
+
+        <div class="timeline-row">
+          <div class="badge-ver">v1.1</div>
+          <div>
+            <h4 style="color: #fff; margin-bottom: 2px;">Gargantua</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Introduced SUSFS v2.3.0 and dual-build volume key recovery installer.</p>
+          </div>
+        </div>
+
+        <div class="timeline-row">
+          <div class="badge-ver">v1.0</div>
+          <div>
+            <h4 style="color: #fff; margin-bottom: 2px;">Sagittarius-A</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">First successful GKI boot on Android 17 / Infinity-X 4.1 with KernelSU-Next.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Developer Portfolio Section -->
+  <section id="developer" class="section container">
+    <div class="dev-profile-block">
+      <div class="dev-top">
+        <img src="https://avatars.githubusercontent.com/u/319547975?v=4" alt="Heri Ilham" class="dev-img">
+        <div>
+          <h2 class="dev-name">Heri Ilham Al'viansyah</h2>
+          <div class="dev-role">Welder / Android Kernel Engineer / Web Developer</div>
+        </div>
+      </div>
+
+      <p class="dev-text">
+        Focused on crafting high-performance Android kernels, embedded system enhancements, and responsive web applications. Maintainer of Carbon Kernel for Xiaomi 12 (cupid) and Glade Kernel for Redmi Note 12 Pro 4G (sweet2). Committed to hardware longevity, clean architecture, and minimal design.
+      </p>
+
+      <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: #fff; font-size: 1.1rem; text-transform: uppercase;">
+        Featured Engineering Projects
+      </div>
+
+      <div class="portfolio-grid">
+        <a href="https://github.com/hrihq/carbon-kernel-cupid" target="_blank" class="port-card">
+          <div class="port-title">
+            <span>Carbon Kernel</span>
+            <span>↗</span>
+          </div>
+          <div class="port-desc">Custom GKI 5.10 kernel for Xiaomi 12 with KernelSU-Next, SUSFS v2.3.0, and thermal floor management.</div>
+          <div class="port-tags">
+            <span class="port-tag">C</span>
+            <span class="port-tag">Linux 5.10</span>
+            <span class="port-tag">KernelSU</span>
+          </div>
+        </a>
+
+        <a href="https://github.com/hrihq/Glade-Kernel" target="_blank" class="port-card">
+          <div class="port-title">
+            <span>Glade Kernel</span>
+            <span>↗</span>
+          </div>
+          <div class="port-desc">Fast-charging tuned kernel for Redmi Note 12 Pro 4G (sweet_k6a) with LineageOS 4.14 base.</div>
+          <div class="port-tags">
+            <span class="port-tag">C</span>
+            <span class="port-tag">Linux 4.14</span>
+            <span class="port-tag">FastCharge</span>
+          </div>
+        </a>
+
+        <a href="https://github.com/hrihq/cutku" target="_blank" class="port-card">
+          <div class="port-title">
+            <span>CutKu Video Editor</span>
+            <span>↗</span>
+          </div>
+          <div class="port-desc">Mobile video editor powered by AndroidX Media3 Transformer and Jetpack Compose.</div>
+          <div class="port-tags">
+            <span class="port-tag">Kotlin</span>
+            <span class="port-tag">Media3</span>
+            <span class="port-tag">Compose</span>
+          </div>
+        </a>
+
+        <a href="https://github.com/hrihq/my-absen" target="_blank" class="port-card">
+          <div class="port-title">
+            <span>Absenku Face Tracking</span>
+            <span>↗</span>
+          </div>
+          <div class="port-desc">Offline facial recognition attendance tracking using Google ML Kit and liquid glass UI.</div>
+          <div class="port-tags">
+            <span class="port-tag">ML Kit</span>
+            <span class="port-tag">Compose</span>
+          </div>
+        </a>
+      </div>
+
+      <div style="margin-top: 36px; display: flex; gap: 14px; flex-wrap: wrap;">
+        <a href="https://github.com/hrihq" target="_blank" class="btn-hero-alt" style="font-size: 0.85rem; padding: 10px 22px;">GitHub @hrihq</a>
+        <a href="https://t.me/kuroya14" target="_blank" class="btn-hero-alt" style="font-size: 0.85rem; padding: 10px 22px;">Telegram @kuroya14</a>
+        <a href="https://t.me/CarbonKernelSGTA" target="_blank" class="btn-hero-main" style="font-size: 0.85rem; padding: 10px 22px;">Channel @CarbonKernelSGTA</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive 3D Spinning Black Hole Particle Physics Engine -->
+  <script>
+    const canvas = document.getElementById('blackhole-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+    let mouse = { x: null, y: null, targetX: null, targetY: null, isInteracting: false };
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      mouse.targetX = width / 2;
+      mouse.targetY = height * 0.42;
+      if (!mouse.x) {
+        mouse.x = mouse.targetX;
+        mouse.y = mouse.targetY;
+      }
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.targetX = e.clientX;
+      mouse.targetY = e.clientY;
+      mouse.isInteracting = true;
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        mouse.targetX = e.touches[0].clientX;
+        mouse.targetY = e.touches[0].clientY;
+        mouse.isInteracting = true;
+      }
+    }, { passive: true });
+
+    class AccretionParticle {
+      constructor() {
+        this.reset(true);
+      }
+
+      reset(init = false) {
+        this.angle = Math.random() * Math.PI * 2;
+        // distance from event horizon center
+        this.dist = init 
+          ? Math.random() * (Math.min(width, height) * 0.48) + 75
+          : Math.min(width, height) * 0.48 + Math.random() * 80;
+        
+        // orbital speed increases closer to singularity (Keplerian physics approximation)
+        this.speed = (1 / Math.sqrt(this.dist)) * 1.8 + Math.random() * 0.003;
+        this.size = Math.random() * 1.6 + 0.6;
+        
+        // Pure monochrome palette: shades of pure white and subtle silver
+        const brightness = Math.floor(Math.random() * 105 + 150);
+        this.baseColor = `rgba(${brightness}, ${brightness}, ${brightness}, `;
+        this.alpha = Math.random() * 0.6 + 0.2;
+      }
+
+      update(cx, cy) {
+        this.angle += this.speed;
+        // Inward gravitational pull
+        this.dist -= 0.22;
+
+        if (this.dist < 65) {
+          this.reset(false);
+        }
+      }
+
+      draw(cx, cy) {
+        // Perspective angle tilt (accretion disk plane)
+        const rx = this.dist;
+        const ry = this.dist * 0.38;
+
+        const x = cx + Math.cos(this.angle) * rx;
+        const y = cy + Math.sin(this.angle) * ry;
+
+        // Gravitational lensing warp effect around photon sphere
+        const dCenter = Math.hypot(x - cx, y - cy);
+        let renderAlpha = this.alpha;
+        if (dCenter < 90) {
+          renderAlpha *= (dCenter - 65) / 25;
+        }
+
+        ctx.fillStyle = this.baseColor + Math.max(0, renderAlpha) + ')';
+        ctx.beginPath();
+        ctx.arc(x, y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Spawn 280 physics particles
+    for (let i = 0; i < 280; i++) {
+      particles.push(new AccretionParticle());
+    }
+
+    let currentCx = width / 2;
+    let currentCy = height * 0.42;
+
+    function animate() {
+      // Smooth camera interpolation towards user interaction
+      const targetCx = mouse.isInteracting ? mouse.targetX * 0.25 + (width / 2) * 0.75 : width / 2;
+      const targetCy = mouse.isInteracting ? mouse.targetY * 0.25 + (height * 0.42) * 0.75 : height * 0.42;
+      
+      currentCx += (targetCx - currentCx) * 0.05;
+      currentCy += (targetCy - currentCy) * 0.05;
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+      ctx.fillRect(0, 0, width, height);
+
+      // Event Horizon core shadow (Pure black singularity)
+      const grad = ctx.createRadialGradient(currentCx, currentCy, 20, currentCx, currentCy, 75);
+      grad.addColorStop(0, '#000000');
+      grad.addColorStop(0.85, '#000000');
+      grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(currentCx, currentCy, 75, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Photon ring outer glow (Monochrome wireframe ring)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(currentCx, currentCy, 110, 42, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(currentCx, currentCy, 160, 60, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Render all active particles
+      particles.forEach(p => {
+        p.update(currentCx, currentCy);
+        p.draw(currentCx, currentCy);
+      });
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Tab switcher logic
+    function switchDock(tabId) {
+      document.querySelectorAll('.dock-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.dock-content').forEach(c => c.classList.remove('active'));
+
+      if (tabId === 'charge') {
+        document.querySelectorAll('.dock-tab')[0].classList.add('active');
+        document.getElementById('tab-charge').classList.add('active');
+      } else if (tabId === 'scroll') {
+        document.querySelectorAll('.dock-tab')[1].classList.add('active');
+        document.getElementById('tab-scroll').classList.add('active');
+      } else if (tabId === 'selector') {
+        document.querySelectorAll('.dock-tab')[2].classList.add('active');
+        document.getElementById('tab-selector').classList.add('active');
+      }
+    }
+  </script>
+
+  <footer>
+    <div class="container">
+      <p>Carbon Kernel Project / Maintained by <a href="https://github.com/hrihq" target="_blank">@hrihq</a> and <a href="https://t.me/kuroya14" target="_blank">@kuroya14</a></p>
+      <p style="margin-top: 6px; font-size: 0.8rem; color: #52525b;">Monochrome edition. Licensed under GPL-2.0.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
