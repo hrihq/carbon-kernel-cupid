@@ -1,0 +1,34 @@
+diff --git a/kernel/sched/walt/sysctl.c b/kernel/sched/walt/sysctl.c
+--- a/kernel/sched/walt/sysctl.c
++++ b/kernel/sched/walt/sysctl.c
+@@ -55,8 +55,8 @@ unsigned int __read_mostly sysctl_sched_asym_cap_sibling_freq_match_pct;
+ unsigned int sysctl_walt_low_latency_task_threshold; /* disabled by default */
+ unsigned int sysctl_sched_conservative_pl;
+-unsigned int sysctl_sched_min_task_util_for_boost = 51;
++unsigned int sysctl_sched_min_task_util_for_boost = 100;
+ unsigned int sysctl_sched_min_task_util_for_uclamp = 51;
+-unsigned int sysctl_sched_min_task_util_for_colocation = 35;
++unsigned int sysctl_sched_min_task_util_for_colocation = 70;
+ unsigned int sysctl_sched_many_wakeup_threshold = WALT_MANY_WAKEUP_DEFAULT;
+ const int sched_user_hint_max = 1000;
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -350,5 +350,5 @@
+ int watermark_boost_factor __read_mostly;
+ #else
+-int watermark_boost_factor __read_mostly = 15000;
++int watermark_boost_factor __read_mostly = 0;
+ #endif
+ int watermark_scale_factor = 10;
+diff --git a/drivers/power/supply/qti_battery_charger.c b/drivers/power/supply/qti_battery_charger.c
+--- a/drivers/power/supply/qti_battery_charger.c
++++ b/drivers/power/supply/qti_battery_charger.c
+@@ -1279,4 +1279,7 @@ static int battery_psy_set_charge_current(struct battery_chg_dev *bcdev,
+ 	if (val < 0 || val >= bcdev->num_thermal_levels)
+ 		return -EINVAL;
+ 
++	if (bcdev->num_thermal_levels > 4 && val > (bcdev->num_thermal_levels / 2))
++		val = bcdev->num_thermal_levels / 2;
++
+ 	rc = write_property_id(bcdev, &bcdev->psy_list[PSY_TYPE_BATTERY],

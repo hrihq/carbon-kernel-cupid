@@ -76,6 +76,12 @@ jobs:
           cp -r ../susfs-repo/kernel_patches/include/linux/* include/linux/
           echo "SUSFS patch applied successfully!"
 
+      - name: Apply Carbon v1.2 Tweaks (Charging Floor and WALT Scroll Cooling)
+        run: |
+          cd kernel-source
+          patch -p1 < ../patches/0001-carbon-v12-tweaks.patch
+          echo "Carbon v1.2 tweaks patch applied successfully!"
+
       - name: Setup KernelSU-Next with SUSFS Support
         run: |
           cd kernel-source
@@ -170,7 +176,7 @@ jobs:
           cp built-kernels/Image-root ak3-pkg/kernels/Image-root
           cp built-kernels/Image-nonroot ak3-pkg/kernels/Image-nonroot
 
-          ZIP_NAME="Carbon-Kernel-cupid-Gargantua-${BUILD_TIME}.zip"
+          ZIP_NAME="Carbon-Kernel-cupid-CygnusX1-${BUILD_TIME}.zip"
           cd ak3-pkg
           zip -r9 "../${ZIP_NAME}" . -x ".git/*" "README.md" ".github/*"
           cd ..
@@ -187,7 +193,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Carbon-Kernel-cupid-Gargantua
+          name: Carbon-Kernel-cupid-CygnusX1
           path: release-pkg/*
 
       - name: Publish GitHub Release
@@ -195,13 +201,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REL_TAG="v2.0-${BUILD_TIME}"
+          REL_TAG="v1.2-${BUILD_TIME}"
           echo "REL_TAG=${REL_TAG}" >> "$GITHUB_ENV"
-          RELEASE_TITLE="Carbon Kernel v2.0 - Gargantua (cupid)"
+          RELEASE_TITLE="Carbon Kernel v1.2 - Cygnus-X1 (cupid)"
           gh release create "${REL_TAG}" \
             release-pkg/* \
             --title "${RELEASE_TITLE}" \
-            --notes "Carbon Kernel v2.0 - Gargantua (cupid / SM8450) with KernelSU-Next, SUSFS v2.3.0, TCP BBR, and Dual-Build Selector | SHA256: ${{ env.ZIP_SHA256 }}"
+            --notes "Carbon Kernel v1.2 - CygnusX1 (cupid / SM8450) with KernelSU-Next, SUSFS v2.3.0, TCP BBR, and Dual-Build Selector | SHA256: ${{ env.ZIP_SHA256 }}"
 
       - name: Forward Release to Telegram Channel
         if: ${{ inputs.create_release }}

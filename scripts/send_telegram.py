@@ -3,10 +3,10 @@ import urllib.request, json, os
 bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
 chat_id = os.environ.get("TELEGRAM_CHAT_ID")
 zip_name = os.environ.get("ZIP_NAME", "Carbon-Kernel.zip")
-rel_tag = os.environ.get("REL_TAG", "v2.0")
+rel_tag = os.environ.get("REL_TAG", "v1.2")
 banner_path = "branding/banner.jpg"
 
-caption = """Carbon Kernel v2.0 - Gargantua
+caption = """Carbon Kernel v1.2 - Cygnus-X1
 Device: Xiaomi 12 (cupid)
 Maintainer: @kuroya14
 
@@ -15,12 +15,13 @@ Information:
 - Support Android 14 to 17 AOSP
 - KernelSU-Next v3.4.2 + SUSFS v2.3.0
 - Dual Variant: Vol+ Root | Vol- Non-Root
-- TCP BBR and FQ network scheduler
+- Fast Charging Floor: Prevent drop to 2W
+- WALT Scheduler: Fix scrolling overheat
 - Anti-Stutter memory tweaks
 - Clang 22.0.2 r596125 Full LTO"""
 
 release_url = f"https://github.com/hrihq/carbon-kernel-cupid/releases"
-guide_url = "https://telegra.ph/Carbon-Kernel-v10-Guide-and-Changelog-10-23"
+guide_url = "https://telegra.ph/Carbon-Kernel-v12-Cygnus-X1-Guide-and-Changelog-10-23"
 
 reply_markup = {
     "inline_keyboard": [
