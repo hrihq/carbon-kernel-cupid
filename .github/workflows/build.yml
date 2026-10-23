@@ -6,47 +6,41 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
-      ksu_variant:
-        description: "KernelSU Variant"
-        required: true
-        default: "next"
-        type: choice
-        options:
-          - "next"
-          - "official"
-          - "none"
       create_release:
-        description: "Create GitHub Release"
+        description: "Create GitHub Release and Post to Telegram"
         type: boolean
         default: true
+
+permissions:
+  contents: write
 
 jobs:
   Build-Carbon:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     permissions:
       contents: write
 
     steps:
-      - name: 🔄 Checkout Carbon Builder
+      - name: Checkout Carbon Builder
         uses: actions/checkout@v4
 
-      - name: ⏰ Prepare timezone
+      - name: Prepare timezone
         run: |
           sudo ln -sf /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 
-      - name: 📦 Install Dependencies
+      - name: Install Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             bc cpio flex bison git python-is-python3 tar aria2 perl wget curl lz4 libssl-dev libelf-dev dwarves zip zstd
 
-      - name: ⚙️ Setup Environment
+      - name: Setup Environment
         run: |
           echo "BUILD_TIME=$(TZ=Asia/Jakarta date '+%d%m%Y-%H%M')" >> "$GITHUB_ENV"
           echo "BUILD_DATE=\"$(TZ=Asia/Jakarta date '+%b %d %Y')\"" >> "$GITHUB_ENV"
 
-      - name: 🔧 Setup Compiler
+      - name: Setup Compiler (Android Clang r596125)
         shell: bash
         run: |
           set -e
@@ -73,24 +67,31 @@ jobs:
           cd kernel-source
           echo "Kernel commit: $(git rev-parse HEAD)"
 
-      - name: Setup KernelSU-Next
-        if: ${{ inputs.ksu_variant != 'none' }}
+      - name: Apply Latest SUSFS Patches
+        run: |
+          git clone --depth=1 --branch gki-android12-5.10 https://gitlab.com/simonpunk/susfs4ksu.git susfs-repo
+          cd kernel-source
+          patch -p1 < ../susfs-repo/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch
+          cp -r ../susfs-repo/kernel_patches/fs/* fs/
+          cp -r ../susfs-repo/kernel_patches/include/linux/* include/linux/
+          echo "SUSFS patch applied successfully!"
+
+      - name: Setup KernelSU-Next with SUSFS Support
         run: |
           cd kernel-source
-          if [ "${{ inputs.ksu_variant }}" = "next" ]; then
-            echo "Setting up KernelSU-Next..."
-            curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s next
-          elif [ "${{ inputs.ksu_variant }}" = "official" ]; then
-            echo "Setting up official KernelSU..."
-            curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
-          fi
+          git clone --depth=1 --branch dev-susfs https://github.com/pershoot/KernelSU-Next.git KernelSU-Next
+          cd drivers
+          ln -sf ../KernelSU-Next/kernel kernelsu
+          grep -q "kernelsu" Makefile || printf "\nobj-\$(CONFIG_KSU) += kernelsu/\n" >> Makefile
+          grep -q "drivers/kernelsu/Kconfig" Kconfig || sed -i '/endmenu/i\source "drivers/kernelsu/Kconfig"' Kconfig
+          echo "KernelSU-Next dev-susfs integrated!"
 
-      - name: 💾 Setup Swap Space
+      - name: Setup Swap Space
         uses: pierotofy/set-swap-space@master
         with:
           swap-size-gb: 16
 
-      - name: 🛠️ Build Kernel
+      - name: Build Dual Kernels (Root + NonRoot)
         shell: bash
         run: |
           set -e
@@ -98,7 +99,7 @@ jobs:
           export PATH="${CLANG_PATH}/bin:${PATH}"
           export ARCH=arm64
           export SUBARCH=arm64
-          export KBUILD_BUILD_USER=hrihq
+          export KBUILD_BUILD_USER=kuroya14
           export KBUILD_BUILD_HOST=LineageOS
           export LLVM=1
           export LLVM_IAS=1
@@ -109,44 +110,67 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost /usr/share/swift || true
           free -h
 
-          # 1. Base GKI defconfig
-          # 1. Load exact verified Infinity-X A17 defconfig (no debugfs/page_owner CRC mismatch)
+          # 1. Base verified Infinity-X 4.1 defconfig
           cp ../arch/arm64/configs/carbon_cupid_defconfig arch/arm64/configs/carbon_cupid_defconfig
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 carbon_cupid_defconfig
 
-          # 2. KernelSU flag
-          if [ "${{ inputs.ksu_variant }}" != "none" ]; then
-            ./scripts/config --file out/.config -e KSU
-          fi
+          # 2. KernelSU + SUSFS Configurations
+          ./scripts/config --file out/.config -e KSU \
+            -e KSU_SUSFS \
+            -e KSU_SUSFS_SUS_PATH \
+            -e KSU_SUSFS_SUS_MOUNT \
+            -e KSU_SUSFS_SUS_KSTAT \
+            -e KSU_SUSFS_SPOOF_UNAME \
+            -e KSU_SUSFS_ENABLE_LOG \
+            -e KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS \
+            -e KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG \
+            -e KSU_SUSFS_OPEN_REDIRECT \
+            -e KSU_SUSFS_SUS_MAP
 
-          # 3. Brand localversion
+          # 3. Tweaks: TCP BBR, FQ, Anti-Stutter
+          ./scripts/config --file out/.config \
+            -e TCP_CONG_ADVANCED -e TCP_CONG_BBR -e DEFAULT_BBR --set-str DEFAULT_TCP_CONG "bbr" \
+            -e NET_SCH_DEFAULT -e DEFAULT_FQ --set-str DEFAULT_NET_SCH "fq" \
+            -e TMPFS_POSIX_ACL -e TMPFS_XATTR
+
+          # 4. Brand localversion
           ./scripts/config --file out/.config --set-str LOCALVERSION "-Carbon-cupid"
 
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 olddefconfig
 
-          # Build Image (cap jobs to 2 during linking to avoid OOM killer)
+          # --- BUILD 1: Image-root (KernelSU-Next + SUSFS) ---
+          echo "========================================="
+          echo " Compiling Image-root (KSU + SUSFS)..."
+          echo "========================================="
           make -j2 O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 Image
+          mkdir -p ../built-kernels
+          cp out/arch/arm64/boot/Image ../built-kernels/Image-root
+          cp out/.config ../built-kernels/carbon_defconfig.txt
 
-          if [ ! -s out/arch/arm64/boot/Image ]; then
-            echo "::error::Built Image not found!"
-            exit 1
-          fi
-          ls -lh out/arch/arm64/boot/Image
-          cp out/.config out/carbon_defconfig.txt
+          # --- BUILD 2: Image-nonroot (Clean / Vanilla) ---
+          echo "========================================="
+          echo " Compiling Image-nonroot (Vanilla)..."
+          echo "========================================="
+          ./scripts/config --file out/.config -d KSU -d KSU_SUSFS
+          make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 olddefconfig
+          make -j2 O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 Image
+          cp out/arch/arm64/boot/Image ../built-kernels/Image-nonroot
+          ls -lh ../built-kernels/
 
-      - name: 💾 Upload Config
+      - name: Upload Config
         uses: actions/upload-artifact@v4
         with:
           name: configs-${{ env.BUILD_TIME }}
-          path: kernel-source/out/carbon_defconfig.txt
+          path: built-kernels/carbon_defconfig.txt
 
-      - name: 📂 Package AnyKernel3 ZIP
+      - name: Package Dual AnyKernel3 ZIP
         run: |
-          mkdir -p ak3-pkg
+          mkdir -p ak3-pkg/kernels
           cp -r ak3/* ak3-pkg/
-          cp kernel-source/out/arch/arm64/boot/Image ak3-pkg/Image
+          cp built-kernels/Image-root ak3-pkg/kernels/Image-root
+          cp built-kernels/Image-nonroot ak3-pkg/kernels/Image-nonroot
 
-          ZIP_NAME="Carbon-Kernel-cupid-SagittariusA-${{ inputs.ksu_variant }}-${BUILD_TIME}.zip"
+          ZIP_NAME="Carbon-Kernel-cupid-Gargantua-${BUILD_TIME}.zip"
           cd ak3-pkg
           zip -r9 "../${ZIP_NAME}" . -x ".git/*" "README.md" ".github/*"
           cd ..
@@ -157,22 +181,32 @@ jobs:
           mkdir -p release-pkg
           mv "${ZIP_NAME}" release-pkg/
           mv "${ZIP_NAME}.sha256" release-pkg/
-          cp kernel-source/out/arch/arm64/boot/Image release-pkg/Image-cupid
+          cp built-kernels/Image-root release-pkg/Image-root
+          cp built-kernels/Image-nonroot release-pkg/Image-nonroot
 
-      - name: 📤 Upload Artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Carbon-Kernel-cupid-${{ inputs.ksu_variant }}
+          name: Carbon-Kernel-cupid-Gargantua
           path: release-pkg/*
 
-      - name: 🚀 Publish GitHub Release
+      - name: Publish GitHub Release
         if: ${{ inputs.create_release }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REL_TAG="v1.0-${BUILD_TIME}"
-          RELEASE_TITLE="Carbon Kernel v1.0 — Sagittarius A* (cupid)"
+          REL_TAG="v2.0-${BUILD_TIME}"
+          echo "REL_TAG=${REL_TAG}" >> "$GITHUB_ENV"
+          RELEASE_TITLE="Carbon Kernel v2.0 - Gargantua (cupid)"
           gh release create "${REL_TAG}" \
             release-pkg/* \
             --title "${RELEASE_TITLE}" \
-            --notes "Carbon Kernel v1.0 — Sagittarius A* (cupid / SM8450) | SHA256: ${{ env.ZIP_SHA256 }}"
+            --notes "Carbon Kernel v2.0 - Gargantua (cupid / SM8450) with KernelSU-Next, SUSFS v2.3.0, TCP BBR, and Dual-Build Selector | SHA256: ${{ env.ZIP_SHA256 }}"
+
+      - name: Forward Release to Telegram Channel
+        if: ${{ inputs.create_release }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python3 scripts/send_telegram.py
