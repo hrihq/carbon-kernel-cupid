@@ -9,7 +9,7 @@ on:
       create_release:
         description: "Create GitHub Release and Post to Telegram"
         type: boolean
-        default: true
+        default: false
 
 permissions:
   contents: write
