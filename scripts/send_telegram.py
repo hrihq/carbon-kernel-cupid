@@ -3,25 +3,21 @@ import urllib.request, json, os
 bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
 chat_id = os.environ.get("TELEGRAM_CHAT_ID")
 zip_name = os.environ.get("ZIP_NAME", "Carbon-Kernel.zip")
-rel_tag = os.environ.get("REL_TAG", "v1.2")
+rel_tag = os.environ.get("REL_TAG", "v1.4")
 banner_path = "branding/banner.jpg"
 
-caption = """Carbon Kernel v1.2 - Cygnus-X1
+caption = """Carbon Kernel v1.4 - Phoenix A
 Device: Xiaomi 12 (cupid)
 Maintainer: @kuroya14
 
-Information:
-- Linux 5.10.269 GKI
-- Support Android 14 to 17 AOSP
-- KernelSU-Next v3.4.2 + SUSFS v2.3.0
-- Dual Variant: Vol+ Root | Vol- Non-Root
-- Fast Charging Floor: Prevent drop to 2W
-- WALT Scheduler: Fix scrolling overheat
-- Anti-Stutter memory tweaks
-- Clang 22.0.2 r596125 Full LTO"""
+New in v1.4:
+- Auto Disable Charging Thermal Throttle: No drop to 2W when battery warm
+- WALT Fast Core Release: 1000ms coloc hysteresis for Snapdragon 8 Gen 1
+- Faster Task Downmigrate: Rapidly shifts load back to Little A510 cores
+- Bidirectional TCP Fast Open: Lower networking and gaming latency"""
 
-release_url = f"https://github.com/hrihq/carbon-kernel-cupid/releases"
-guide_url = "https://telegra.ph/Carbon-Kernel-v12-Cygnus-X1-Guide-and-Changelog-10-23"
+release_url = f"https://github.com/hrihq/carbon-kernel-cupid/releases/tag/{rel_tag}"
+guide_url = "https://telegra.ph/Carbon-Kernel-v14---Phoenix-A-Guide-and-Changelog-10-24"
 
 reply_markup = {
     "inline_keyboard": [
