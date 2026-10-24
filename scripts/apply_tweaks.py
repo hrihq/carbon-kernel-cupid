@@ -221,29 +221,20 @@ replace_vfsstat = """static int show_vfsstat(struct seq_file *m, struct vfsmount
 if target_vfsstat in c:
     c = c.replace(target_vfsstat, replace_vfsstat, 1)
 
-# Also patch SUSFS functions if they exist in proc_namespace.c
-target_sus_vfsmnt = """static int susfs_show_vfsmnt(struct seq_file *m, struct vfsmount *mnt)
-{"""
-replace_sus_vfsmnt = """static int susfs_show_vfsmnt(struct seq_file *m, struct vfsmount *mnt)
-{
-	struct proc_mounts *p = m->private;
-	if (is_suspicious_mount(mnt, &p->root))
+# Also patch SUSFS functions if they exist in proc_namespace.c (without re-declaring p or violating C99 declaration rules)
+susfs_hook_target = """	if (r->mnt_id >= DEFAULT_KSU_MNT_ID)
 		return 0;"""
-if target_sus_vfsmnt in c:
-    c = c.replace(target_sus_vfsmnt, replace_sus_vfsmnt, 1)
+susfs_hook_replace = """	if (is_suspicious_mount(mnt, &p->root))
+		return 0;
 
-target_sus_mntinfo = """static int susfs_show_mountinfo(struct seq_file *m, struct vfsmount *mnt)
-{"""
-replace_sus_mntinfo = """static int susfs_show_mountinfo(struct seq_file *m, struct vfsmount *mnt)
-{
-	struct proc_mounts *p = m->private;
-	if (is_suspicious_mount(mnt, &p->root))
+	if (r->mnt_id >= DEFAULT_KSU_MNT_ID)
 		return 0;"""
-if target_sus_mntinfo in c:
-    c = c.replace(target_sus_mntinfo, replace_sus_mntinfo, 1)
+if susfs_hook_target in c:
+    # Replace both occurrences in susfs_show_vfsmnt and susfs_show_mountinfo
+    c = c.replace(susfs_hook_target, susfs_hook_replace)
 
 with open("fs/proc_namespace.c", "w", encoding="utf-8") as f:
     f.write(c)
-print("Patched fs/proc_namespace.c with suspicious mount filters!")
+print("Patched fs/proc_namespace.c with suspicious mount filters cleanly!")
 
 print("All Carbon Kernel v1.4 Phoenix A tweaks & Anti-Detection hooks applied successfully!")
