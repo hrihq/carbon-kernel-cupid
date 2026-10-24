@@ -67,14 +67,17 @@ jobs:
           cd kernel-source
           echo "Kernel commit: $(git rev-parse HEAD)"
 
-      - name: Apply Latest SUSFS Patches
+      - name: Apply Latest SUSFS & Anti-Detection Patches
         run: |
           git clone --depth=1 --branch gki-android12-5.10 https://gitlab.com/simonpunk/susfs4ksu.git susfs-repo
           cd kernel-source
           patch -p1 < ../susfs-repo/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch
           cp -r ../susfs-repo/kernel_patches/fs/* fs/
           cp -r ../susfs-repo/kernel_patches/include/linux/* include/linux/
-          echo "SUSFS patch applied successfully!"
+          echo "Installing Hide-Zygisk / Anti-Root VFS sources..."
+          cp -r ../patches/hide_zygisk/include/linux/* include/linux/
+          cp -r ../patches/hide_zygisk/fs/* fs/
+          echo "SUSFS & Anti-Detection patches installed!"
 
       - name: Apply Carbon v1.4 Tweaks (Charging Floor and WALT Scroll Cooling)
         run: |

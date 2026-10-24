@@ -71,4 +71,179 @@ patch("drivers/power/supply/xiaomi/battmngr/charger/main/xm_charger_core.c",
       "\tg_battmngr_noti->misc_msg.disable_thermal = 0;",
       "\tg_battmngr_noti->misc_msg.disable_thermal = 1;")
 
-print("All Carbon Kernel v1.4 Phoenix A tweaks applied successfully!")
+# 8. Anti-Detection VFS Engine (Prevent Livin Mandiri / Bank / Momo / Zygisk detection)
+with open("fs/Makefile", "a", encoding="utf-8") as f:
+    f.write("\nobj-y += suspicious.o\n")
+print("Appended suspicious.o to fs/Makefile!")
+
+# 8a. fs/stat.c: Hook vfs_getattr
+with open("fs/stat.c", "r", encoding="utf-8") as f:
+    c = f.read()
+if "#include <linux/suspicious.h>" not in c:
+    c = "#include <linux/suspicious.h>\n" + c
+target_stat = """int vfs_getattr(const struct path *path, struct kstat *stat,
+		u32 request_mask, unsigned int query_flags)
+{
+	int retval;"""
+replace_stat = """int vfs_getattr(const struct path *path, struct kstat *stat,
+		u32 request_mask, unsigned int query_flags)
+{
+	int retval;
+
+	if (is_suspicious_path(path))
+		return -ENOENT;"""
+if target_stat in c:
+    c = c.replace(target_stat, replace_stat, 1)
+with open("fs/stat.c", "w", encoding="utf-8") as f:
+    f.write(c)
+print("Patched fs/stat.c with suspicious hook!")
+
+# 8b. fs/namei.c: Hook do_filp_open
+with open("fs/namei.c", "r", encoding="utf-8") as f:
+    c = f.read()
+if "#include <linux/suspicious.h>" not in c:
+    c = "#include <linux/suspicious.h>\n" + c
+target_namei = """struct file *do_filp_open(int dfd, struct filename *pathname,
+		const struct open_flags *op)
+{
+	struct nameidata nd;
+	int flags = op->lookup_flags;
+	struct file *filp;"""
+replace_namei = """struct file *do_filp_open(int dfd, struct filename *pathname,
+		const struct open_flags *op)
+{
+	struct nameidata nd;
+	int flags = op->lookup_flags;
+	struct file *filp;
+
+	if (suspicious_path(pathname))
+		return ERR_PTR(-ENOENT);"""
+if target_namei in c:
+    c = c.replace(target_namei, replace_namei, 1)
+with open("fs/namei.c", "w", encoding="utf-8") as f:
+    f.write(c)
+print("Patched fs/namei.c with suspicious hook!")
+
+# 8c. fs/open.c: Hook do_faccessat
+with open("fs/open.c", "r", encoding="utf-8") as f:
+    c = f.read()
+if "#include <linux/suspicious.h>" not in c:
+    c = "#include <linux/suspicious.h>\n" + c
+target_open = """retry:
+	res = user_path_at(dfd, filename, lookup_flags, &path);
+	if (res)
+		goto out;"""
+replace_open = """retry:
+	res = user_path_at(dfd, filename, lookup_flags, &path);
+	if (res)
+		goto out;
+
+	if (is_suspicious_path(&path)) {
+		path_put(&path);
+		res = -ENOENT;
+		goto out;
+	}"""
+if target_open in c:
+    c = c.replace(target_open, replace_open, 1)
+with open("fs/open.c", "w", encoding="utf-8") as f:
+    f.write(c)
+print("Patched fs/open.c with suspicious hook!")
+
+# 8d. fs/proc_namespace.c: Hook show_vfsmnt, show_mountinfo, show_vfsstat
+with open("fs/proc_namespace.c", "r", encoding="utf-8") as f:
+    c = f.read()
+if "#include <linux/suspicious.h>" not in c:
+    c = "#include <linux/suspicious.h>\n" + c
+
+target_vfsmnt = """static int show_vfsmnt(struct seq_file *m, struct vfsmount *mnt)
+{
+	struct proc_mounts *p = m->private;
+	struct mount *r = real_mount(mnt);
+	struct path mnt_path = { .dentry = mnt->mnt_root, .mnt = mnt };
+	struct super_block *sb = mnt_path.dentry->d_sb;
+	int err;"""
+replace_vfsmnt = """static int show_vfsmnt(struct seq_file *m, struct vfsmount *mnt)
+{
+	struct proc_mounts *p = m->private;
+	struct mount *r = real_mount(mnt);
+	struct path mnt_path = { .dentry = mnt->mnt_root, .mnt = mnt };
+	struct super_block *sb = mnt_path.dentry->d_sb;
+	int err;
+
+	if (is_suspicious_mount(mnt, &p->root)) {
+		err = SEQ_SKIP;
+		goto out;
+	}"""
+if target_vfsmnt in c:
+    c = c.replace(target_vfsmnt, replace_vfsmnt, 1)
+
+target_mntinfo = """static int show_mountinfo(struct seq_file *m, struct vfsmount *mnt)
+{
+	struct proc_mounts *p = m->private;
+	struct mount *r = real_mount(mnt);
+	struct super_block *sb = mnt->mnt_sb;
+	struct path mnt_path = { .dentry = mnt->mnt_root, .mnt = mnt };
+	int err;"""
+replace_mntinfo = """static int show_mountinfo(struct seq_file *m, struct vfsmount *mnt)
+{
+	struct proc_mounts *p = m->private;
+	struct mount *r = real_mount(mnt);
+	struct super_block *sb = mnt->mnt_sb;
+	struct path mnt_path = { .dentry = mnt->mnt_root, .mnt = mnt };
+	int err;
+
+	if (is_suspicious_mount(mnt, &p->root)) {
+		err = SEQ_SKIP;
+		goto out;
+	}"""
+if target_mntinfo in c:
+    c = c.replace(target_mntinfo, replace_mntinfo, 1)
+
+target_vfsstat = """static int show_vfsstat(struct seq_file *m, struct vfsmount *mnt)
+{
+	struct proc_mounts *p = m->private;
+	struct mount *r = real_mount(mnt);
+	struct path mnt_path = { .dentry = mnt->mnt_root, .mnt = mnt };
+	struct super_block *sb = mnt_path.dentry->d_sb;
+	int err;"""
+replace_vfsstat = """static int show_vfsstat(struct seq_file *m, struct vfsmount *mnt)
+{
+	struct proc_mounts *p = m->private;
+	struct mount *r = real_mount(mnt);
+	struct path mnt_path = { .dentry = mnt->mnt_root, .mnt = mnt };
+	struct super_block *sb = mnt_path.dentry->d_sb;
+	int err;
+
+	if (is_suspicious_mount(mnt, &p->root)) {
+		err = SEQ_SKIP;
+		goto out;
+	}"""
+if target_vfsstat in c:
+    c = c.replace(target_vfsstat, replace_vfsstat, 1)
+
+# Also patch SUSFS functions if they exist in proc_namespace.c
+target_sus_vfsmnt = """static int susfs_show_vfsmnt(struct seq_file *m, struct vfsmount *mnt)
+{"""
+replace_sus_vfsmnt = """static int susfs_show_vfsmnt(struct seq_file *m, struct vfsmount *mnt)
+{
+	struct proc_mounts *p = m->private;
+	if (is_suspicious_mount(mnt, &p->root))
+		return 0;"""
+if target_sus_vfsmnt in c:
+    c = c.replace(target_sus_vfsmnt, replace_sus_vfsmnt, 1)
+
+target_sus_mntinfo = """static int susfs_show_mountinfo(struct seq_file *m, struct vfsmount *mnt)
+{"""
+replace_sus_mntinfo = """static int susfs_show_mountinfo(struct seq_file *m, struct vfsmount *mnt)
+{
+	struct proc_mounts *p = m->private;
+	if (is_suspicious_mount(mnt, &p->root))
+		return 0;"""
+if target_sus_mntinfo in c:
+    c = c.replace(target_sus_mntinfo, replace_sus_mntinfo, 1)
+
+with open("fs/proc_namespace.c", "w", encoding="utf-8") as f:
+    f.write(c)
+print("Patched fs/proc_namespace.c with suspicious mount filters!")
+
+print("All Carbon Kernel v1.4 Phoenix A tweaks & Anti-Detection hooks applied successfully!")
