@@ -17,23 +17,23 @@ def parse_args(argv):
     while i < len(argv):
         a = argv[i]
         if a == '-e':
-            i += 1
-            if i < len(argv):
-                ops.append(('enable', argv[i]))
-        elif a == '-d':
-            i += 1
-            if i < len(argv):
-                ops.append(('disable', argv[i]))
-        elif a == '--set-str':
-            i += 1
             if i + 1 < len(argv):
-                ops.append(('setstr', argv[i], argv[i+1]))
-                i += 1
-        elif '=' in a and a.startswith('-e'):
-            # -e KEY=value
+                ops.append(('enable', argv[i+1]))
+            i += 2
+        elif a == '-d':
+            if i + 1 < len(argv):
+                ops.append(('disable', argv[i+1]))
+            i += 2
+        elif a == '--set-str':
+            if i + 2 < len(argv):
+                ops.append(('setstr', argv[i+1], argv[i+2]))
+            i += 3
+        elif '=' in a:
             op, val = a.split('=', 1)
             ops.append(('enable', op, val))
-        i += 1
+            i += 1
+        else:
+            i += 1
     return ops
 
 def patch_config(ops):
