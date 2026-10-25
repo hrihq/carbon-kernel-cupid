@@ -33,12 +33,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            bc cpio flex bison git python3 python-is-python3 tar aria2 perl wget curl lz4 libssl-dev libelf-dev dwarves zip zstd \
-            linux-libre-headers-5.10 linux-headers-5.10
-      - name: Setup Kernel Headers
-        run: |
-          sudo ln -sf /usr/src/linux-headers-5.10*/include/generated/* /usr/src/linux-headers-5.10*/
-          echo "Kernel headers installed"
+            bc cpio flex bison git python3 python-is-python3 tar aria2 perl wget curl lz4 libssl-dev libelf-dev dwarves zip zstd
 
       - name: Setup Environment
         run: |
