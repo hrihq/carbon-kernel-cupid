@@ -10,9 +10,9 @@
 #include <linux/namei.h>
 
 #include "mount.h"
-#include <linux/kuid.h>
+#include <linux/uidgid.h>
 
-#define uid_matches() (getuid() >= 2000)
+#define uid_matches() (current_uid().val >= 2000)
 
 static const char* const suspicious_paths[] = {
 	"/storage/emulated/0/TWRP",
