@@ -11,6 +11,8 @@
 #include <linux/suspicious.h>
 
 #include "mount.h"
+#include <stdio.h>
+#include <linux/kuid.h>
 
 #define uid_matches() (getuid() >= 2000)
 
