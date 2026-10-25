@@ -99,6 +99,12 @@ jobs:
         with:
           swap-size-gb: 16
 
+      - name: Fix broken mmio/trace.h include (SUSFS patch corrupts kernel/trace/trace.h)
+        shell: bash
+        run: |
+          cd kernel-source
+          sed -i 's|^#include <linux/mmio// trace\.h>$|#include <linux/mmiotrace.h>|' kernel/trace/trace.h && echo "FIXED mmio/trace.h include"
+
       - name: Build Dual Kernels (Root + NonRoot)
         shell: bash
         run: |
