@@ -190,7 +190,7 @@ jobs:
           cp built-kernels/Image-root ak3-pkg/kernels/Image-root
           cp built-kernels/Image-nonroot ak3-pkg/kernels/Image-nonroot
 
-          ZIP_NAME="Carbon-Kernel-cupid-Gargantua-${BUILD_TIME}.zip"
+          ZIP_NAME="Carbon-Kernel-cupid-IC 1101-${BUILD_TIME}.zip"
           cd ak3-pkg
           zip -r9 "../${ZIP_NAME}" . -x ".git/*" "README.md" ".github/*"
           cd ..
@@ -207,7 +207,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Carbon-Kernel-cupid-Gargantua
+          name: Carbon-Kernel-cupid-IC 1101
           path: release-pkg/*
 
       - name: Publish GitHub Release
@@ -217,11 +217,11 @@ jobs:
         run: |
           REL_TAG="v1.4-${BUILD_TIME}"
           echo "REL_TAG=${REL_TAG}" >> "$GITHUB_ENV"
-          RELEASE_TITLE="Carbon Kernel v1.4 - Gargantua (cupid)"
+          RELEASE_TITLE="Carbon Kernel v1.4 - IC 1101 (cupid)"
           gh release create "${REL_TAG}" \
             release-pkg/* \
             --title "${RELEASE_TITLE}" \
-            --notes "Carbon Kernel v1.4 - Gargantua (cupid / SM8450) with KernelSU-Next, SUSFS v2.3.0, TCP BBR, and Dual-Build Selector | SHA256: ${{ env.ZIP_SHA256 }}"
+            --notes "Carbon Kernel v1.4 - IC 1101 (cupid / SM8450) with KernelSU-Next, SUSFS v2.3.0, TCP BBR, and Dual-Build Selector | SHA256: ${{ env.ZIP_SHA256 }}"
 
       - name: Forward Release to Telegram Channel
         if: ${{ inputs.create_release }}
