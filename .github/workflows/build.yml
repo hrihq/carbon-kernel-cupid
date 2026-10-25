@@ -123,23 +123,13 @@ jobs:
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 carbon_cupid_defconfig
 
           # 2. KernelSU + SUSFS Configurations
-          ./scripts/config --file out/.config -e KSU \
-            -e KSU_SUSFS \
-            -e KSU_SUSFS_SUS_PATH \
-            -e KSU_SUSFS_SUS_MOUNT \
-            -e KSU_SUSFS_SUS_KSTAT \
-            -e KSU_SUSFS_SPOOF_UNAME \
-            -e KSU_SUSFS_ENABLE_LOG \
-            -e KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS \
-            -e KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG \
-            -e KSU_SUSFS_OPEN_REDIRECT \
-            -e KSU_SUSFS_SUS_MAP
+          python3 ../scripts/apply_configs.py -e KSU KSU_SUSFS KSU_SUSFS_SUS_PATH KSU_SUSFS_SUS_MOUNT KSU_SUSFS_SUS_KSTAT KSU_SUSFS_SPOOF_UNAME KSU_SUSFS_ENABLE_LOG KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG KSU_SUSFS_OPEN_REDIRECT KSU_SUSFS_SUS_MAP
 
           # 3.5. Anti-Detection Hardening (kptr_restrict, kallsyms_hidepid, hidepid, root-check)
-          ./scripts/config --file out/.config -e CONFIG_SECURITY_ROOTKEY -e CONFIG_KPTR_RESTRICT=2 -e CONFIG_KALLSYMS_HIDEPID=2 -e CONFIG_PROC_HIDEPID=2 -e CONFIG_SECURITY_YAMA
+          python3 ../scripts/apply_configs.py -e CONFIG_SECURITY_ROOTKEY -e CONFIG_KPTR_RESTRICT=2 -e CONFIG_KALLSYMS_HIDEPID=2 -e CONFIG_PROC_HIDEPID=2 -e CONFIG_SECURITY_YAMA
 
           # 3.6. Kernel Hardening
-          ./scripts/config --file out/.config -e CONFIG_STRIP_ASM_SYMS -e CONFIG_UNWINDER_FRAME_POINTER -e CONFIG_FTRACE_SYSCALLS -e CONFIG_KGDB -e CONFIG_KGDB_SERIAL_CONSOLE
+          python3 ../scripts/apply_configs.py -e CONFIG_STRIP_ASM_SYMS CONFIG_UNWINDER_FRAME_POINTER CONFIG_FTRACE_SYSCALLS CONFIG_KGDB CONFIG_KGDB_SERIAL_CONSOLE
 
           # 3.7. Sysctl: hide kernel pointers, hide kallsyms, hidepid
           echo "kernel.kptr_restrict = 2" >> out/.config
@@ -148,13 +138,19 @@ jobs:
           echo "kernel.yama_ptrace_scope = 1" >> out/.config
 
           # 3.8. Tweaks: TCP BBR, FQ, Anti-Stutter
-          ./scripts/config --file out/.config \
-            -e TCP_CONG_ADVANCED -e TCP_CONG_BBR -e DEFAULT_BBR --set-str DEFAULT_TCP_CONG "bbr" \
-            -e NET_SCH_DEFAULT -e DEFAULT_FQ --set-str DEFAULT_NET_SCH "fq" \
-            -e TMPFS_POSIX_ACL -e TMPFS_XATTR
+          python3 ../scripts/apply_configs.py \
+            -e TCP_CONG_ADVANCED \
+            -e TCP_CONG_BBR \
+            -e DEFAULT_BBR \
+            --set-str DEFAULT_TCP_CONG "bbr" \
+            -e NET_SCH_DEFAULT \
+            -e DEFAULT_FQ \
+            --set-str DEFAULT_NET_SCH "fq" \
+            -e TMPFS_POSIX_ACL \
+            -e TMPFS_XATTR
 
           # 4. Brand localversion
-          ./scripts/config --file out/.config --set-str LOCALVERSION "-Carbon-cupid"
+          python3 ../scripts/apply_configs.py --set-str LOCALVERSION "-Carbon-cupid"
 
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 olddefconfig
 
@@ -171,7 +167,7 @@ jobs:
           echo "========================================="
           echo " Compiling Image-nonroot (Vanilla)..."
           echo "========================================="
-          ./scripts/config --file out/.config -d KSU -d KSU_SUSFS
+          python3 ../scripts/apply_configs.py -d KSU KSU_SUSFS
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 olddefconfig
           make -j2 O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 Image
           cp out/arch/arm64/boot/Image ../built-kernels/Image-nonroot
