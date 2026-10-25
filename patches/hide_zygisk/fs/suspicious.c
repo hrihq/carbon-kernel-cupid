@@ -11,7 +11,6 @@
 #include <linux/suspicious.h>
 
 #include "mount.h"
-#include <stdio.h>
 #include <linux/kuid.h>
 
 #define uid_matches() (getuid() >= 2000)
@@ -319,17 +318,17 @@ out:
 bool suspicious_pid_alive(int pid)
 {
 	char buf[64];
-	FILE *fp;
+	struct file *fp;
 
 	/* Only probes from elevated UID (ksu/root context) can call this. */
 	if (from_kuid(&init_user_ns, current_euid()) < KUIDT_INIT(2000))
 		return false;
 
 	snprintf(buf, sizeof(buf), "/proc/%d", pid);
-	fp = fopen(buf, "r");
-	if (!fp)
+	fp = filp_open(buf, O_RDONLY, 0);
+	if (IS_ERR(fp))
 		return false;
-	fclose(fp);
+	filp_close(fp, NULL);
 
 	/* Existence of /proc/<pid> means the process exists. */
 	return true;
@@ -337,24 +336,16 @@ bool suspicious_pid_alive(int pid)
 
 bool suspicious_modules_list(void)
 {
-	char line[512];
-	FILE *fp;
+	struct file *fp;
 
 	if (from_kuid(&init_user_ns, current_euid()) < KUIDT_INIT(2000))
 		return false;
 
-	fp = fopen("/proc/modules", "r");
-	if (!fp)
+	fp = filp_open("/proc/modules", O_RDONLY, 0);
+	if (IS_ERR(fp))
 		return false;
 
-	while (fgets(line, sizeof(line), fp)) {
-		/* Skip comment/header lines; any module entry is suspicious. */
-		if (line[0] == '#')
-			continue;
-		if (strchrnul(line, ' ')[0] != '\0')
-			break;
-	}
-	fclose(fp);
-
+	/* Existence of /proc/modules file is suspicious. */
+	filp_close(fp, NULL);
 	return true;
 }
