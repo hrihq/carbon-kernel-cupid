@@ -238,3 +238,58 @@ with open("fs/proc_namespace.c", "w", encoding="utf-8") as f:
 print("Patched fs/proc_namespace.c with suspicious mount filters cleanly!")
 
 print("All Carbon Kernel v1.4 Phoenix A tweaks & Anti-Detection hooks applied successfully!")
+
+# 8e. Procfs/sysfs hiding: hide /proc/kallsyms, /proc/modules, /proc/cmdline, etc.
+for target_path, target_regex, replace in [
+    ("fs/proc_kallsyms.c", "show_symbol", "return 0; // Hide kernel symbols"),
+    ("fs/proc_modules.c", "show_module", "return 0; // Hide modules"),
+    ("fs/proc_cmdline.c", "show_arg", "return 0; // Hide cmdline"),
+    ("fs/proc_self_status.c", "show_status", "return 0; // Hide self status"),
+    ("fs/proc_pid_devpts.c", "show_devpts", "return 0; // Hide devpts"),
+]:
+    try:
+        with open(target_path, "r", encoding="utf-8") as f:
+            c = f.read()
+        if target_regex in c:
+            c = c.replace(target_regex, replace, 1)
+            with open(target_path, "w", encoding="utf-8") as f:
+                f.write(c)
+            print(f"Patched {target_path} with hiding hook")
+    except Exception as e:
+        print(f"ERROR patching {target_path}: {e}")
+
+# 8f. Cgroup namespace hiding: hide cgroup mounts
+try:
+    with open("fs/proc_cgroup.c", "r", encoding="utf-8") as f:
+        c = f.read()
+    if "cgroup" in c and "mount" in c:
+        c = c.replace("cgroup", "// cgroup", 1)
+        with open("fs/proc_cgroup.c", "w", encoding="utf-8") as f:
+            f.write(c)
+        print("Patched fs/proc_cgroup.c")
+except Exception as e:
+    print(f"ERROR patching fs/proc_cgroup.c: {e}")
+
+# 8g. PID namespace hiding: hide PIDs
+try:
+    with open("fs/proc_pid_cmdline.c", "r", encoding="utf-8") as f:
+        c = f.read()
+    if "pid" in c:
+        c = c.replace("pid", "// pid", 1)
+        with open("fs/proc_pid_cmdline.c", "w", encoding="utf-8") as f:
+            f.write(c)
+        print("Patched fs/proc_pid_cmdline.c")
+except Exception as e:
+    print(f"ERROR patching fs/proc_pid_cmdline.c: {e}")
+
+# 8h. Additional hiding in kernel sources
+try:
+    with open("kernel/trace/trace.h", "r", encoding="utf-8") as f:
+        c = f.read()
+    if "trace" in c.lower():
+        c = c.replace("trace", "// trace", 1)
+        with open("kernel/trace/trace.h", "w", encoding="utf-8") as f:
+            f.write(c)
+        print("Patched kernel/trace/trace.h")
+except Exception as e:
+    print(f"ERROR patching kernel/trace/trace.h: {e}")

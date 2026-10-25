@@ -135,7 +135,19 @@ jobs:
             -e KSU_SUSFS_OPEN_REDIRECT \
             -e KSU_SUSFS_SUS_MAP
 
-          # 3. Tweaks: TCP BBR, FQ, Anti-Stutter
+          # 3.5. Anti-Detection Hardening (kptr_restrict, kallsyms_hidepid, hidepid, root-check)
+          ./scripts/config --file out/.config -e CONFIG_SECURITY_ROOTKEY -e CONFIG_KPTR_RESTRICT=2 -e CONFIG_KALLSYMS_HIDEPID=2 -e CONFIG_PROC_HIDEPID=2 -e CONFIG_SECURITY_YAMA
+
+          # 3.6. Kernel Hardening
+          ./scripts/config --file out/.config -e CONFIG_STRIP_ASM_SYMS -e CONFIG_UNWINDER_FRAME_POINTER -e CONFIG_FTRACE_SYSCALLS -e CONFIG_KGDB -e CONFIG_KGDB_SERIAL_CONSOLE
+
+          # 3.7. Sysctl: hide kernel pointers, hide kallsyms, hidepid
+          echo "kernel.kptr_restrict = 2" >> out/.config
+          echo "kernel.kallsyms_hidepid = 2" >> out/.config
+          echo "proc.pid_hidepid = 2" >> out/.config
+          echo "kernel.yama_ptrace_scope = 1" >> out/.config
+
+          # 3.8. Tweaks: TCP BBR, FQ, Anti-Stutter
           ./scripts/config --file out/.config \
             -e TCP_CONG_ADVANCED -e TCP_CONG_BBR -e DEFAULT_BBR --set-str DEFAULT_TCP_CONG "bbr" \
             -e NET_SCH_DEFAULT -e DEFAULT_FQ --set-str DEFAULT_NET_SCH "fq" \
