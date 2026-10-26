@@ -7718,3 +7718,31 @@ CONFIG_SCHED_WALT=m
 # CONFIG_SCHED_WALT_DEBUG is not set
 # CONFIG_SCHED_CONSERVATIVE_BOOST_LPM_BIAS is not set
 # end of QTI WALT based scheduler features
+
+# v1.6-Cupid Performance & Power Improvements
+
+# CPU Scheduling: Better responsiveness & task placement
+CONFIG_SCHEDSTATS=y
+CONFIG_SCHED_MIGRATION_COST_NS=500000
+
+# Memory Management: Compressed swap + compaction tuning
+CONFIG_ZSWAP=y
+CONFIG_ZSWAP_ZPOOL_DEFAULT="z3fold"
+CONFIG_ZSWAP_COMPRESSOR_DEFAULT="lz4"
+CONFIG_ZSWAP_MAX_POOL_PERCENT=25
+
+# Gaming Stability: Reduce frame drops + stutters
+CONFIG_MEMORY_HOTPLUG_DEFAULT_ONLINE=y
+CONFIG_TRANSPARENT_HUGEPAGE=y
+CONFIG_TRANSPARENT_HUGEPAGE_MADVISE=y
+
+# Idle Power: Deeper sleep states + injection
+CONFIG_IDLE_INJECTION=y
+
+# GPU Governor: Smoother freq scaling
+CONFIG_DEVFREQ_GOV_PERFORMANCE=y
+CONFIG_DEVFREQ_GOV_POWERSAVE=y
+
+# Process accounting: Better monitoring
+CONFIG_PROCESS_ACCOUNTING=y
+CONFIG_PROCESS_ACCOUNTING_TASKSTATS=y
