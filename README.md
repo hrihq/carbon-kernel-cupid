@@ -20,3 +20,17 @@ Custom GKI Linux 5.10 Kernel with **KernelSU-Next** integration for **Xiaomi 12 
 2. Boot into recovery (TWRP / OrangeFox).
 3. Flash the `.zip`.
 4. Reboot system and install the latest **KernelSU-Next Manager APK**.
+
+## Development Notes
+
+- **Workflow**: `.github/workflows/build.yml` handles:
+  - Build (dual build: root + non-root)
+  - Package AnyKernel3 ZIP
+  - Publish GitHub Release (with assets)
+  - Forward to Telegram channel
+
+- **Changelog**: `CHANGELOG.md` is read by `scripts/send_telegram.py` to auto-generate release posts.
+
+- **Telegram Notification**: Requires `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` secrets in the repo.
+
+- **Kernel Config**: `arch/arm64/configs/carbon_cupid_defconfig` is the base config, patched with performance/power options per version.
