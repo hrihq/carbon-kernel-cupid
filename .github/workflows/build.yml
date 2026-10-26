@@ -217,13 +217,26 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REL_TAG="v1.4-${BUILD_TIME}"
+          # Use actual tag from git or default
+          if git describe --tags --exact-match HEAD 2>/dev/null; then
+            REL_TAG=$(git describe --tags --exact-match HEAD)
+          else
+            REL_TAG="v1.5-Gargantua"
+          fi
+          
           echo "REL_TAG=${REL_TAG}" >> "$GITHUB_ENV"
-          RELEASE_TITLE="Carbon Kernel v1.4 - IC 1101 (cupid)"
+          
+          # Extract version from tag for title
+          RELEASE_TITLE="Carbon Kernel ${REL_TAG} (cupid)"
+          
+          # Create/update release with assets
           gh release create "${REL_TAG}" \
             release-pkg/* \
             --title "${RELEASE_TITLE}" \
-            --notes "Carbon Kernel v1.4 - IC 1101 (cupid / SM8450) with KernelSU-Next, SUSFS v2.3.0, TCP BBR, and Dual-Build Selector | SHA256: ${{ env.ZIP_SHA256 }}"
+            --notes "Carbon Kernel ${REL_TAG} for Xiaomi 12 (cupid/SM8450) with KernelSU-Next, SUSFS v2.3.0, TCP BBR, and Dual-Build Selector | SHA256: ${{ env.ZIP_SHA256 }}" \
+            --clobber || true
+          
+          echo "Release published: ${REL_TAG}"
 
       - name: Forward Release to Telegram Channel
         if: ${{ inputs.create_release }}
