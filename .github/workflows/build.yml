@@ -229,12 +229,16 @@ jobs:
           # Extract version from tag for title
           RELEASE_TITLE="Carbon Kernel ${REL_TAG} (cupid)"
           
-          # Create/update release with assets
+          # Create release (ignore if exists)
           gh release create "${REL_TAG}" \
-            release-pkg/* \
             --title "${RELEASE_TITLE}" \
-            --notes "Carbon Kernel ${REL_TAG} for Xiaomi 12 (cupid/SM8450) with KernelSU-Next, SUSFS v2.3.0, TCP BBR, and Dual-Build Selector | SHA256: ${{ env.ZIP_SHA256 }}" \
-            --clobber || true
+            --notes "Carbon Kernel ${REL_TAG} for Xiaomi 12 (cupid/SM8450) with KernelSU-Next, SUSFS v2.3.0, TCP BBR, and Dual-Build Selector | SHA256: ${{ env.ZIP_SHA256 }}" || true
+          
+          # Upload/attach assets
+          cd release-pkg
+          for file in *; do
+            gh release upload "${REL_TAG}" "$file" --clobber || true
+          done
           
           echo "Release published: ${REL_TAG}"
 
