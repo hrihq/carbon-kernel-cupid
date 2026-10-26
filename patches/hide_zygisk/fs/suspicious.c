@@ -320,7 +320,7 @@ bool suspicious_pid_alive(int pid)
 	struct file *fp;
 
 	/* Only probes from elevated UID (ksu/root context) can call this. */
-	if (from_kuid(&init_user_ns, current_euid()).val < 2000)
+	if (from_kuid(&init_user_ns, current_euid()) < 2000)
 		return false;
 
 	snprintf(buf, sizeof(buf), "/proc/%d", pid);
@@ -337,7 +337,7 @@ bool suspicious_modules_list(void)
 {
 	struct file *fp;
 
-	if (from_kuid(&init_user_ns, current_euid()).val < 2000)
+	if (from_kuid(&init_user_ns, current_euid()) < 2000)
 		return false;
 
 	fp = filp_open("/proc/modules", O_RDONLY, 0);
