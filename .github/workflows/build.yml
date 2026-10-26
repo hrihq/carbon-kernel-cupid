@@ -247,5 +247,6 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          REL_TAG: ${{ env.REL_TAG }}
         run: |
           python3 scripts/send_telegram.py
