@@ -169,14 +169,6 @@ static const char* const suspicious_mount_devices[] = {
 	"lkm"
 };
 
-static uid_t getuid(void) {
-	const struct cred* const credentials = current_cred();
-	if (credentials == NULL) {
-		return 0;
-	}
-	return credentials->uid.val;
-}
-
 int is_suspicious_path(const struct path* const file)
 {
 	size_t index = 0, size = 4096;
