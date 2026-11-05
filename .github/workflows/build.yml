@@ -6,6 +6,13 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
+      ksu_flavor:
+        description: "Root Provider"
+        type: choice
+        options:
+          - "next"
+          - "kowsu"
+        default: "next"
       create_release:
         description: "Create GitHub Release and Post to Telegram"
         type: boolean
@@ -67,43 +74,41 @@ jobs:
           cd kernel-source
           echo "Kernel commit: $(git rev-parse HEAD)"
 
-      - name: Apply Latest SUSFS & Anti-Detection Patches
+      - name: Apply SUSFS Patches (KernelSU-Next only)
+        if: ${{ github.event.inputs.ksu_flavor != 'kowsu' }}
         run: |
           git clone --depth=1 --branch gki-android12-5.10 https://gitlab.com/simonpunk/susfs4ksu.git susfs-repo
           cd kernel-source
           patch -p1 < ../susfs-repo/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch
           cp -r ../susfs-repo/kernel_patches/fs/* fs/
           cp -r ../susfs-repo/kernel_patches/include/linux/* include/linux/
-          echo "Installing Hide-Zygisk / Anti-Root VFS sources..."
-          cp -r ../patches/hide_zygisk/include/linux/* include/linux/
-          cp -r ../patches/hide_zygisk/fs/* fs/
-          echo "SUSFS & Anti-Detection patches installed!"
+          echo "SUSFS patches installed!"
 
-      - name: Apply Carbon v1.4 Tweaks (Charging Floor and WALT Scroll Cooling)
+      - name: Apply Carbon Tweaks (Bypass Charging & WALT Cooling)
         run: |
           cd kernel-source
           python3 ../scripts/apply_tweaks.py
 
-      - name: Setup KernelSU-Next with SUSFS Support
+      - name: Setup KernelSU / KowSU
         run: |
           cd kernel-source
-          git clone --depth=1 --branch dev-susfs https://github.com/pershoot/KernelSU-Next.git KernelSU-Next
+          if [ "${{ github.event.inputs.ksu_flavor }}" = "kowsu" ]; then
+            echo "Integrating KowSU v3.2.5..."
+            git clone --depth=1 --branch v3.2.5 https://github.com/KOWX712/KernelSU.git KernelSU-Next
+          else
+            echo "Integrating KernelSU-Next dev-susfs..."
+            git clone --depth=1 --branch dev-susfs https://github.com/pershoot/KernelSU-Next.git KernelSU-Next
+          fi
           cd drivers
           ln -sf ../KernelSU-Next/kernel kernelsu
           grep -q "kernelsu" Makefile || printf "\nobj-\$(CONFIG_KSU) += kernelsu/\n" >> Makefile
           grep -q "drivers/kernelsu/Kconfig" Kconfig || sed -i '/endmenu/i\source "drivers/kernelsu/Kconfig"' Kconfig
-          echo "KernelSU-Next dev-susfs integrated!"
+          echo "KernelSU integrated!"
 
       - name: Setup Swap Space
         uses: pierotofy/set-swap-space@master
         with:
           swap-size-gb: 16
-
-      - name: Fix broken mmio/trace.h include (SUSFS patch corrupts kernel/trace/trace.h)
-        shell: bash
-        run: |
-          cd kernel-source
-          sed -i 's|^#include <linux/mmio// trace\.h>$|#include <linux/mmiotrace.h>|' kernel/trace/trace.h && echo "FIXED mmio/trace.h include"
 
       - name: Build Dual Kernels (Root + NonRoot)
         shell: bash
@@ -129,21 +134,13 @@ jobs:
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 carbon_cupid_defconfig
 
           # 2. KernelSU + SUSFS Configurations
-          python3 ../scripts/apply_configs.py -e KSU KSU_SUSFS KSU_SUSFS_SUS_PATH KSU_SUSFS_SUS_MOUNT KSU_SUSFS_SUS_KSTAT KSU_SUSFS_SPOOF_UNAME KSU_SUSFS_ENABLE_LOG KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG KSU_SUSFS_OPEN_REDIRECT KSU_SUSFS_SUS_MAP
+          if [ "${{ github.event.inputs.ksu_flavor }}" = "kowsu" ]; then
+            python3 ../scripts/apply_configs.py -e KSU
+          else
+            python3 ../scripts/apply_configs.py -e KSU KSU_SUSFS KSU_SUSFS_SUS_PATH KSU_SUSFS_SUS_MOUNT KSU_SUSFS_SUS_KSTAT KSU_SUSFS_SPOOF_UNAME KSU_SUSFS_ENABLE_LOG KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG KSU_SUSFS_OPEN_REDIRECT KSU_SUSFS_SUS_MAP
+          fi
 
-          # 3.5. Anti-Detection Hardening (kptr_restrict, kallsyms_hidepid, hidepid, root-check)
-          python3 ../scripts/apply_configs.py -e CONFIG_SECURITY_ROOTKEY -e CONFIG_KPTR_RESTRICT=2 -e CONFIG_KALLSYMS_HIDEPID=2 -e CONFIG_PROC_HIDEPID=2 -e CONFIG_SECURITY_YAMA
-
-          # 3.6. Kernel Hardening
-          python3 ../scripts/apply_configs.py -e CONFIG_STRIP_ASM_SYMS CONFIG_UNWINDER_FRAME_POINTER CONFIG_FTRACE_SYSCALLS CONFIG_KGDB CONFIG_KGDB_SERIAL_CONSOLE
-
-          # 3.7. Sysctl: hide kernel pointers, hide kallsyms, hidepid
-          echo "kernel.kptr_restrict = 2" >> out/.config
-          echo "kernel.kallsyms_hidepid = 2" >> out/.config
-          echo "proc.pid_hidepid = 2" >> out/.config
-          echo "kernel.yama_ptrace_scope = 1" >> out/.config
-
-          # 3.8. Tweaks: TCP BBR, FQ, Anti-Stutter
+          # 3. Tweaks: TCP BBR, FQ, Anti-Stutter
           python3 ../scripts/apply_configs.py \
             -e TCP_CONG_ADVANCED \
             -e TCP_CONG_BBR \

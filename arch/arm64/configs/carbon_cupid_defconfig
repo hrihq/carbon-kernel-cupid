@@ -7722,7 +7722,7 @@ CONFIG_SCHED_WALT=m
 # v1.6-Cupid Performance & Power Improvements
 
 # CPU Scheduling: Better responsiveness & task placement
-CONFIG_SCHEDSTATS=y
+# CONFIG_SCHEDSTATS is not set
 CONFIG_SCHED_MIGRATION_COST_NS=500000
 
 # Memory Management: Compressed swap + compaction tuning
@@ -7743,6 +7743,5 @@ CONFIG_IDLE_INJECTION=y
 CONFIG_DEVFREQ_GOV_PERFORMANCE=y
 CONFIG_DEVFREQ_GOV_POWERSAVE=y
 
-# Process accounting: Better monitoring
-CONFIG_PROCESS_ACCOUNTING=y
-CONFIG_PROCESS_ACCOUNTING_TASKSTATS=y
+# Process accounting: Disabled to prevent background CPU wakeups and heating
+# CONFIG_PROCESS_ACCOUNTING is not set
