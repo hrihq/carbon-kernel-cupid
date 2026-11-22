@@ -70,21 +70,21 @@ jobs:
 
       - name: Clone Kernel Source (LineageOS SM8450)
         run: |
-          git clone --depth=1 --branch lineage-24.0 https://github.com/LineageOS/android_kernel_xiaomi_sm8450 kernel-source
+          git clone --depth=1 --branch lineage-24.0-6.6 https://github.com/Joshabys-Xiaomi-12-Org/android_kernel_xiaomi_sm8450 kernel-source
           cd kernel-source
           echo "Kernel commit: $(git rev-parse HEAD)"
 
       - name: Apply SUSFS Patches (KernelSU-Next only)
         if: ${{ github.event.inputs.ksu_flavor != 'kowsu' }}
         run: |
-          git clone --depth=1 --branch gki-android12-5.10 https://gitlab.com/simonpunk/susfs4ksu.git susfs-repo
+          git clone --depth=1 --branch gki-android15-6.6 https://gitlab.com/simonpunk/susfs4ksu.git susfs-repo
           cd kernel-source
-          patch -p1 < ../susfs-repo/kernel_patches/50_add_susfs_in_gki-android12-5.10.patch
+          patch -p1 < ../susfs-repo/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch
           cp -r ../susfs-repo/kernel_patches/fs/* fs/
           cp -r ../susfs-repo/kernel_patches/include/linux/* include/linux/
           echo "SUSFS patches installed!"
 
-      - name: Apply Carbon Tweaks (Bypass Charging & WALT Cooling)
+      - name: Apply Carbon Tweaks (WALT Cooling & TCP Fast Open)
         run: |
           cd kernel-source
           python3 ../scripts/apply_tweaks.py
@@ -129,15 +129,18 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost /usr/share/swift || true
           free -h
 
-          # 1. Base verified Infinity-X 4.1 defconfig
-          cp ../arch/arm64/configs/carbon_cupid_defconfig arch/arm64/configs/carbon_cupid_defconfig
-          make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 carbon_cupid_defconfig
+          # 1. Base GKI defconfig + SM8450 Waipio Perf config
+          make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 gki_defconfig
+          ./scripts/kconfig/merge_config.sh -O out -m out/.config arch/arm64/configs/vendor/waipio_perf.config
+
+          # Force WALT built-in (=y instead of =m) for Image-only GKI build
+          python3 ../scripts/apply_configs.py -e SCHED_WALT
 
           # 2. KernelSU + SUSFS Configurations
           if [ "${{ github.event.inputs.ksu_flavor }}" = "kowsu" ]; then
             python3 ../scripts/apply_configs.py -e KSU
           else
-            python3 ../scripts/apply_configs.py -e KSU KSU_SUSFS KSU_SUSFS_SUS_PATH KSU_SUSFS_SUS_MOUNT KSU_SUSFS_SUS_KSTAT KSU_SUSFS_SPOOF_UNAME KSU_SUSFS_ENABLE_LOG KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG KSU_SUSFS_OPEN_REDIRECT KSU_SUSFS_SUS_MAP
+            python3 ../scripts/apply_configs.py -e KSU KSU_SUSFS KSU_SUSFS_SUS_PATH KSU_SUSFS_SUS_MOUNT KSU_SUSFS_SUS_KSTAT KSU_SUSFS_SPOOF_UNAME KSU_SUSFS_ENABLE_LOG KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG KSU_SUSFS_OPEN_REDIRECT KSU_SUSFS_SUS_MAP KSU_SUSFS_PRIORITY_UID_FILTER
           fi
 
           # 3. Tweaks: TCP BBR, FQ, Anti-Stutter
@@ -161,7 +164,7 @@ jobs:
           echo "========================================="
           echo " Compiling Image-root (KSU + SUSFS)..."
           echo "========================================="
-          make -j2 O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 Image
+          make -j$(nproc --all) O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 Image
           mkdir -p ../built-kernels
           cp out/arch/arm64/boot/Image ../built-kernels/Image-root
           cp out/.config ../built-kernels/carbon_defconfig.txt
@@ -172,7 +175,7 @@ jobs:
           echo "========================================="
           python3 ../scripts/apply_configs.py -d KSU KSU_SUSFS
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 olddefconfig
-          make -j2 O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 Image
+          make -j$(nproc --all) O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 Image
           cp out/arch/arm64/boot/Image ../built-kernels/Image-nonroot
           ls -lh ../built-kernels/
 
@@ -229,7 +232,7 @@ jobs:
           # Create release (ignore if exists)
           gh release create "${REL_TAG}" \
             --title "${RELEASE_TITLE}" \
-            --notes "Carbon Kernel ${REL_TAG} for Xiaomi 12 (cupid/SM8450) with KernelSU-Next, SUSFS v2.3.0, TCP BBR, and Dual-Build Selector | SHA256: ${{ env.ZIP_SHA256 }}" || true
+            --notes "Carbon Kernel ${REL_TAG} for Xiaomi 12 (cupid/SM8450) Linux 6.6 GKI with KernelSU-Next, SUSFS v2.4.0, TCP BBR, and Dual-Build Selector | SHA256: ${{ env.ZIP_SHA256 }}" || true
           
           # Upload/attach assets
           cd release-pkg
