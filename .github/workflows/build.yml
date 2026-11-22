@@ -56,7 +56,7 @@ jobs:
           echo "Using Google Android Clang r510928 (Clang 18.0.0 - Official AOSP 6.6 GKI Toolchain)..."
           toolchain_repo="${RUNNER_TEMP}/android-clang-repo"
           rm -rf "${toolchain_repo}"
-          git clone --filter=blob:none --no-checkout --depth=1 \
+          git clone --filter=blob:none --no-checkout --depth=1 --branch llvm-r510928 \
             https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 "${toolchain_repo}"
           git -C "${toolchain_repo}" sparse-checkout set clang-r510928
           git -C "${toolchain_repo}" checkout -q
