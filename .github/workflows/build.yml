@@ -133,8 +133,8 @@ jobs:
           make O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 gki_defconfig
           ./scripts/kconfig/merge_config.sh -O out -m out/.config arch/arm64/configs/vendor/waipio_perf.config
 
-          # Force WALT built-in (=y instead of =m) for Image-only GKI build
-          python3 ../scripts/apply_configs.py -e SCHED_WALT
+          # Force WALT and Qualcomm SoC info built-in (=y instead of =m) for Image-only GKI build
+          python3 ../scripts/apply_configs.py -e SCHED_WALT QCOM_SOCINFO QCOM_SMEM HWSPINLOCK_QCOM
 
           # 2. KernelSU + SUSFS Configurations
           if [ "${{ github.event.inputs.ksu_flavor }}" = "kowsu" ]; then
