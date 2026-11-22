@@ -47,20 +47,20 @@ jobs:
           echo "BUILD_TIME=$(TZ=Asia/Jakarta date '+%d%m%Y-%H%M')" >> "$GITHUB_ENV"
           echo "BUILD_DATE=\"$(TZ=Asia/Jakarta date '+%b %d %Y')\"" >> "$GITHUB_ENV"
 
-      - name: Setup Compiler (Android Clang r596125)
+      - name: Setup Compiler (Android Clang r510928)
         shell: bash
         run: |
           set -e
           mkdir -p clang
 
-          echo "Using Google Android Clang r596125 (Clang 22.0.2 - Official Android 17 / Infinity-X 4.1 Toolchain)..."
+          echo "Using Google Android Clang r510928 (Clang 18.0.0 - Official AOSP 6.6 GKI Toolchain)..."
           toolchain_repo="${RUNNER_TEMP}/android-clang-repo"
           rm -rf "${toolchain_repo}"
           git clone --filter=blob:none --no-checkout --depth=1 \
             https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 "${toolchain_repo}"
-          git -C "${toolchain_repo}" sparse-checkout set clang-r596125
+          git -C "${toolchain_repo}" sparse-checkout set clang-r510928
           git -C "${toolchain_repo}" checkout -q
-          mv "${toolchain_repo}/clang-r596125"/* clang/
+          mv "${toolchain_repo}/clang-r510928"/* clang/
           rm -rf "${toolchain_repo}"
 
           echo "CLANG_PATH=$GITHUB_WORKSPACE/clang" >> "$GITHUB_ENV"
